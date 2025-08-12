@@ -146,4 +146,4 @@ export default function FuturisticBackground() {
       <div className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_40%,rgba(56,189,248,.10),rgba(168,85,247,.06)_40%,rgba(0,0,0,0)_70%)]" />
     </div>
   )
-} 
+}
