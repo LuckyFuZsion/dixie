@@ -141,7 +141,7 @@ async function reload(startAt: string, endAt: string) {
 
     const sorted = [...base].sort((a, b) => b.wagered - a.wagered)
     const prizeForRank = (rank: number): number => {
-      const map: Record<number, number> = { 1: 300, 2: 150, 3: 75, 4: 50, 5: 25 }
+      const map: Record<number, number> = { 1: 400, 2: 225, 3: 100, 4: 50, 5: 25 }
       return map[rank] ?? 0
     }
 
@@ -297,16 +297,17 @@ async function reload(startAt: string, endAt: string) {
         </div>
 
         {/* Podium (mobile: stacked; desktop: 2-1-3 row) */}
-        <div className="flex flex-col md:flex-row justify-center md:items-end items-stretch gap-4 md:gap-8 mb-8 md:mb-12">
-          {[1, 0, 2].map((idx) => {
+        {/* Mobile: show 1st → 2nd → 3rd */}
+        <div className="flex flex-col md:hidden justify-center items-stretch gap-4 mb-8">
+          {[0, 1, 2].map((idx) => {
             const p = topThree[idx]
-            if (!p) return <div key={`empty-${idx}`} className="hidden md:block w-72 md:w-80" />
+            if (!p) return <div key={`empty-m-${idx}`} className="w-full max-w-[18rem] mx-auto" />
             const isFirst = idx === 0
-            const sizeClass = isFirst ? "h-72 md:h-80" : "h-64 md:h-72"
+            const sizeClass = isFirst ? "h-72" : "h-64"
             const ringClass = isFirst ? "ring-2 ring-yellow-400" : idx === 1 ? "ring-2 ring-gray-300" : "ring-2 ring-amber-500"
             const prizeClass = isFirst ? "text-yellow-400" : idx === 1 ? "text-white" : "text-orange-400"
             return (
-              <div key={p.id} className={`relative group w-full max-w-[18rem] md:w-80 mx-auto ${sizeClass}`}>
+              <div key={`m-${p.id}`} className={`relative group w-full max-w-[18rem] mx-auto ${sizeClass}`}>
                 <div className={`absolute inset-0 rounded-2xl ${ringClass} opacity-80`} />
                 <div className="relative h-full bg-slate-900/50 backdrop-blur-md rounded-2xl border border-slate-600/30 flex flex-col items-center justify-center text-center px-6 shadow-[0_0_20px_rgba(0,255,255,0.10)]">
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-200 text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full shadow" style={{ fontFamily: 'var(--font-future)' }}>{p.rank}</div>
@@ -316,7 +317,34 @@ async function reload(startAt: string, endAt: string) {
                   </div>
                   <div className="mb-4 mt-1 bg-cyan-500/10 text-cyan-200 font-bold px-4 py-2 rounded-full border border-cyan-400/30 shadow-[0_0_12px_rgba(34,211,238,0.25)]" style={{ fontFamily: 'var(--font-future)' }}>${currency(p.wagered)}</div>
                   <div className="text-white/70 text-xs uppercase tracking-widest mb-1" style={{ fontFamily: 'var(--font-future)' }}>Prize</div>
-                  <div className={`text-2xl md:text-3xl font-black ${prizeClass}`} style={{ fontFamily: 'var(--font-future)' }}>${p.prize}</div>
+                  <div className={`text-2xl font-black ${prizeClass}`} style={{ fontFamily: 'var(--font-future)' }}>${p.prize}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Desktop: keep 2nd (left), 1st (center), 3rd (right) */}
+        <div className="hidden md:flex justify-center items-end gap-8 mb-12">
+          {[1, 0, 2].map((idx) => {
+            const p = topThree[idx]
+            if (!p) return <div key={`empty-d-${idx}`} className="w-80" />
+            const isFirst = idx === 0
+            const sizeClass = isFirst ? "h-80" : "h-72"
+            const ringClass = isFirst ? "ring-2 ring-yellow-400" : idx === 1 ? "ring-2 ring-gray-300" : "ring-2 ring-amber-500"
+            const prizeClass = isFirst ? "text-yellow-400" : idx === 1 ? "text-white" : "text-orange-400"
+            return (
+              <div key={`d-${p.id}`} className={`relative group w-80 ${sizeClass}`}>
+                <div className={`absolute inset-0 rounded-2xl ${ringClass} opacity-80`} />
+                <div className="relative h-full bg-slate-900/50 backdrop-blur-md rounded-2xl border border-slate-600/30 flex flex-col items-center justify-center text-center px-6 shadow-[0_0_20px_rgba(0,255,255,0.10)]">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-200 text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full shadow" style={{ fontFamily: 'var(--font-future)' }}>{p.rank}</div>
+                  <div className="mb-1 text-white text-2xl font-extrabold flex items-center gap-2" style={{ fontFamily: 'var(--font-future)' }}>
+                    {isFirst && <span className="text-yellow-400">🏆</span>}
+                    <span>{maskUsername(p.username)}</span>
+                  </div>
+                  <div className="mb-4 mt-1 bg-cyan-500/10 text-cyan-200 font-bold px-4 py-2 rounded-full border border-cyan-400/30 shadow-[0_0_12px_rgba(34,211,238,0.25)]" style={{ fontFamily: 'var(--font-future)' }}>${currency(p.wagered)}</div>
+                  <div className="text-white/70 text-xs uppercase tracking-widest mb-1" style={{ fontFamily: 'var(--font-future)' }}>Prize</div>
+                  <div className={`text-3xl font-black ${prizeClass}`} style={{ fontFamily: 'var(--font-future)' }}>${p.prize}</div>
                 </div>
               </div>
             )
