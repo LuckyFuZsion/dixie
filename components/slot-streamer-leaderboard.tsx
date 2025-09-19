@@ -289,7 +289,7 @@ async function reload(startAt: string, endAt: string) {
           <div className="flex justify-center mb-6">
             <Image src="/images/rainbet-logo.png" alt="Rainbet" width={260} height={96} className="opacity-90" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-wider" style={{ fontFamily: 'var(--font-future)' }}>$600 MONTHLY CODE TDD LEADERBOARD!</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-wider" style={{ fontFamily: 'var(--font-future)' }}>$800 MONTHLY CODE TDD LEADERBOARD!</h1>
           <p className="text-white/70 text-base md:text-lg mb-2">
             Every <span className="font-bold">BET</span> on Rainbet under Code <span className="font-bold text-cyan-400">TDD</span> counts towards your score.
           </p>
