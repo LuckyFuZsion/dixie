@@ -1,7 +1,6 @@
 "use client"
 
 import { Sparkles, Gamepad2, Twitch, Cloud } from "lucide-react"
-import { Card } from "@/components/ui/card"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import SlotStreamerLeaderboard from "@/components/slot-streamer-leaderboard"
@@ -223,7 +222,7 @@ export default function GamerPage() {
 
       <footer className="relative z-10 mt-auto w-full">
         <div className="bg-pink-600/80 backdrop-blur-md border-t-2 border-pink-300/30 shadow-2xl py-4 px-4">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
+          <div className="max-w-6xl mx-auto flex flex-row items-center justify-center gap-4 md:gap-12">
             {/* Twitch Section */}
             <a
               href="https://twitch.tv/diamonddixie_slots"
