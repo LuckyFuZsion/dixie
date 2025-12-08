@@ -9,12 +9,12 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "DiamondDixie BitFortune - $1000 Wager Leaderboard",
-  description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $500. Leaderboard updates every 15 minutes. Watch live on Twitch!",
+  description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000. Leaderboard updates every 15 minutes. Watch live on Twitch!",
   keywords: ["DiamondDixie", "BitFortune", "leaderboard", "casino", "wager", "prizes", "Twitch", "gaming", "slots"],
   authors: [{ name: "DiamondDixie" }],
   openGraph: {
     title: "DiamondDixie BitFortune - $1000 Wager Leaderboard",
-    description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $500.",
+    description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000.",
     type: "website",
     siteName: "DiamondDixie BitFortune Leaderboard",
     images: [
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "DiamondDixie BitFortune - $1000 Wager Leaderboard",
-    description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $500.",
+    description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000.",
     images: ["/Opengraph (1).png"],
   },
   icons: {
