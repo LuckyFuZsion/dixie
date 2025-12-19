@@ -374,7 +374,8 @@ async function reload(fromUnix: number, toUnix: number) {
             </a>
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-wider drop-shadow-lg" style={{ fontFamily: 'var(--font-future)', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>$1000 Wager Leaderboard</h1>
-          <p className="text-white text-sm italic drop-shadow-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>The leaderboard updates every 15 minutes.</p>
+          <p className="text-white text-sm italic drop-shadow-sm mb-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>The leaderboard updates every 15 minutes.</p>
+          <p className="text-orange-400 text-xs font-semibold drop-shadow-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Note: No originals can be used at 1.01x for wagering</p>
         </div>
 
         {/* Podium (mobile: stacked; desktop: 2-1-3 row) */}
@@ -481,8 +482,8 @@ async function reload(fromUnix: number, toUnix: number) {
         <div className="flex flex-col items-center gap-3 md:gap-4 mb-16">
           {rest.map((p) => (
             <div key={p.id} className="relative group w-full max-w-[64rem] mx-2 md:mx-4">
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-amber-400 rounded-2xl blur-sm opacity-30 group-hover:opacity-60 transition" />
-              <div className="relative bg-slate-900/40 backdrop-blur-md rounded-2xl px-4 md:px-6 py-4 md:py-5 border border-slate-600/30 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-[0_0_20px_rgba(0,255,255,0.08)]">
+              <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-amber-600 to-red-600 rounded-2xl blur-sm opacity-20 group-hover:opacity-40 transition" />
+              <div className="relative bg-slate-800/60 backdrop-blur-md rounded-2xl px-4 md:px-6 py-4 md:py-5 border border-slate-600/50 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-[0_0_20px_rgba(251,146,60,0.10)]">
                 <div className="flex items-center gap-2 md:gap-4">
                   <div className="text-white text-base font-extrabold w-10 text-center" style={{ fontFamily: 'var(--font-future)' }}>#{p.rank}</div>
                   {p.prize > 0 && (

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 
-interface Sparkle {
+interface Particle {
   x: number
   y: number
   vx: number
@@ -11,16 +11,6 @@ interface Sparkle {
   baseAlpha: number
   twinkleSpeed: number
   twinkleOffset: number
-}
-
-interface CloudBubble {
-  x: number
-  y: number
-  vx: number
-  vy: number
-  size: number
-  baseAlpha: number
-  driftSpeed: number
 }
 
 export default function FuturisticBackground() {
@@ -35,10 +25,11 @@ export default function FuturisticBackground() {
 
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1))
 
-    let sparkles: Sparkle[] = []
-    let clouds: CloudBubble[] = []
+    let particles: Particle[] = []
     let width = 0
     let height = 0
+    const gridSize = 100
+    const connectionDistance = 150
 
     const resize = () => {
       width = Math.floor(window.innerWidth)
@@ -49,125 +40,116 @@ export default function FuturisticBackground() {
       canvas.style.height = `${height}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      // Create pink sparkles
-      const sparkleCount = Math.min(150, Math.max(60, Math.floor((width * height) / 35000)))
-      sparkles = new Array(sparkleCount).fill(0).map(() => {
-        const speed = 0.3 + Math.random() * 0.5
+      // Create particles for futuristic effect - more particles and more visible
+      const particleCount = Math.min(150, Math.max(80, Math.floor((width * height) / 30000)))
+      particles = new Array(particleCount).fill(0).map(() => {
+        const speed = 0.15 + Math.random() * 0.25
         return {
           x: Math.random() * width,
           y: Math.random() * height,
           vx: (Math.random() * 2 - 1) * speed,
           vy: (Math.random() * 2 - 1) * speed,
-          size: 1 + Math.random() * 2.5,
-          baseAlpha: 0.4 + Math.random() * 0.5,
-          twinkleSpeed: 0.003 + Math.random() * 0.004,
+          size: 2 + Math.random() * 3,
+          baseAlpha: 0.5 + Math.random() * 0.4,
+          twinkleSpeed: 0.002 + Math.random() * 0.003,
           twinkleOffset: Math.random() * Math.PI * 2,
-        } as Sparkle
-      })
-
-      // Create clouds/bubbles
-      const cloudCount = Math.min(25, Math.max(10, Math.floor((width * height) / 80000)))
-      clouds = new Array(cloudCount).fill(0).map(() => {
-        const speed = 0.1 + Math.random() * 0.2
-        const size = 40 + Math.random() * 80
-        return {
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: (Math.random() * 2 - 1) * speed,
-          vy: (Math.random() * 2 - 1) * speed - 0.05, // Slight upward drift
-          size: size,
-          baseAlpha: 0.15 + Math.random() * 0.2,
-          driftSpeed: 0.0005 + Math.random() * 0.001,
-        } as CloudBubble
+        } as Particle
       })
     }
 
     const draw = (t: number) => {
-      // Clear with light blue background (semi-transparent for smooth animation)
-      ctx.fillStyle = "rgba(173, 216, 230, 0.3)"
+      // Clear with dark background (more transparent to show through)
+      ctx.fillStyle = "rgba(15, 23, 42, 0.05)"
       ctx.fillRect(0, 0, width, height)
 
-      // Draw clouds/bubbles first (behind sparkles)
-      for (const cloud of clouds) {
-        cloud.x += cloud.vx
-        cloud.y += cloud.vy
+      // Draw connecting lines between nearby particles - make more visible
+      ctx.strokeStyle = "rgba(251, 146, 60, 0.3)"
+      ctx.lineWidth = 1
+      ctx.globalAlpha = 0.3
 
-        // Wrap around edges
-        if (cloud.x < -cloud.size) cloud.x = width + cloud.size
-        if (cloud.x > width + cloud.size) cloud.x = -cloud.size
-        if (cloud.y < -cloud.size) cloud.y = height + cloud.size
-        if (cloud.y > height + cloud.size) cloud.y = -cloud.size
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x
+          const dy = particles[i].y - particles[j].y
+          const distance = Math.sqrt(dx * dx + dy * dy)
 
-        // Gentle floating motion
-        const floatX = Math.sin(t * cloud.driftSpeed + cloud.x * 0.01) * 2
-        const floatY = Math.cos(t * cloud.driftSpeed + cloud.y * 0.01) * 2
-
-        ctx.save()
-        ctx.globalAlpha = cloud.baseAlpha
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)"
-        
-        // Draw soft cloud/bubble with gradient
-        const gradient = ctx.createRadialGradient(
-          cloud.x + floatX,
-          cloud.y + floatY,
-          0,
-          cloud.x + floatX,
-          cloud.y + floatY,
-          cloud.size
-        )
-        gradient.addColorStop(0, "rgba(255, 255, 255, 0.8)")
-        gradient.addColorStop(0.5, "rgba(255, 255, 255, 0.4)")
-        gradient.addColorStop(1, "rgba(255, 255, 255, 0)")
-        
-        ctx.fillStyle = gradient
-        ctx.beginPath()
-        ctx.arc(cloud.x + floatX, cloud.y + floatY, cloud.size, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
+          if (distance < connectionDistance) {
+            const alpha = (1 - distance / connectionDistance) * 0.5
+            ctx.globalAlpha = alpha
+            ctx.beginPath()
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.stroke()
+          }
+        }
       }
 
-      // Draw pink sparkles
-      for (const sparkle of sparkles) {
-        sparkle.x += sparkle.vx
-        sparkle.y += sparkle.vy
+      // Draw particles
+      for (const particle of particles) {
+        particle.x += particle.vx
+        particle.y += particle.vy
 
         // Wrap around edges
-        if (sparkle.x < -10) sparkle.x = width + 10
-        if (sparkle.x > width + 10) sparkle.x = -10
-        if (sparkle.y < -10) sparkle.y = height + 10
-        if (sparkle.y > height + 10) sparkle.y = -10
+        if (particle.x < -10) particle.x = width + 10
+        if (particle.x > width + 10) particle.x = -10
+        if (particle.y < -10) particle.y = height + 10
+        if (particle.y > height + 10) particle.y = -10
 
         // Twinkling effect
-        const twinkle = (Math.sin(t * sparkle.twinkleSpeed + sparkle.twinkleOffset) + 1) * 0.5
-        const alpha = sparkle.baseAlpha * (0.3 + 0.7 * twinkle)
-        const currentSize = sparkle.size * (0.7 + 0.3 * twinkle)
+        const twinkle = (Math.sin(t * particle.twinkleSpeed + particle.twinkleOffset) + 1) * 0.5
+        const alpha = particle.baseAlpha * (0.4 + 0.6 * twinkle)
+        const currentSize = particle.size * (0.8 + 0.2 * twinkle)
 
         ctx.save()
         ctx.globalAlpha = alpha
-        
-        // Pink colors - various shades
-        const pinkShades = [
-          "#FF69B4", // Hot pink
-          "#FF1493", // Deep pink
-          "#FFB6C1", // Light pink
-          "#FFC0CB", // Pink
-          "#FF91A4", // Pink
+
+        // Masculine colors - orange, amber, red shades
+        const masculineShades = [
+          "#F97316", // Orange
+          "#FB923C", // Orange-400
+          "#F59E0B", // Amber
+          "#EF4444", // Red
+          "#EA580C", // Orange-600
+          "#DC2626", // Red-600
         ]
-        const pinkColor = pinkShades[Math.floor((sparkle.x + sparkle.y) % pinkShades.length)]
-        
-        ctx.shadowColor = pinkColor
-        ctx.shadowBlur = 8
-        ctx.fillStyle = pinkColor
+        const masculineColor = masculineShades[Math.floor((particle.x + particle.y + t * 0.1) % masculineShades.length)]
+
+        // Outer glow - make brighter
+        ctx.shadowColor = masculineColor
+        ctx.shadowBlur = 12
+        ctx.fillStyle = masculineColor
         ctx.beginPath()
-        ctx.arc(sparkle.x, sparkle.y, currentSize, 0, Math.PI * 2)
+        ctx.arc(particle.x, particle.y, currentSize, 0, Math.PI * 2)
         ctx.fill()
-        
-        // Add a small bright center
-        ctx.globalAlpha = alpha * 1.5
+
+        // Inner bright core - make more visible
+        ctx.globalAlpha = Math.min(1, alpha * 1.8)
+        ctx.shadowBlur = 0
         ctx.fillStyle = "#FFFFFF"
         ctx.beginPath()
-        ctx.arc(sparkle.x, sparkle.y, currentSize * 0.3, 0, Math.PI * 2)
+        ctx.arc(particle.x, particle.y, currentSize * 0.5, 0, Math.PI * 2)
         ctx.fill()
+
+        // Draw geometric shape around particle (hexagon) - make more visible
+        ctx.globalAlpha = alpha * 0.5
+        ctx.strokeStyle = masculineColor
+        ctx.lineWidth = 1.5
+        const sides = 6
+        const radius = currentSize * 1.5
+        ctx.beginPath()
+        for (let i = 0; i < sides; i++) {
+          const angle = (i * 2 * Math.PI) / sides + t * 0.001
+          const x = particle.x + radius * Math.cos(angle)
+          const y = particle.y + radius * Math.sin(angle)
+          if (i === 0) {
+            ctx.moveTo(x, y)
+          } else {
+            ctx.lineTo(x, y)
+          }
+        }
+        ctx.closePath()
+        ctx.stroke()
+
         ctx.restore()
       }
     }
@@ -188,7 +170,7 @@ export default function FuturisticBackground() {
   }, [])
 
   return (
-    <div className="fixed inset-0 -z-10 pointer-events-none">
+    <div className="fixed inset-0 z-0 pointer-events-none">
       <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   )

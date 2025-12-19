@@ -8,29 +8,29 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "DiamondDixie BitFortune - $1000 Wager Leaderboard",
-  description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000. Leaderboard updates every 15 minutes. Watch live on Twitch!",
-  keywords: ["DiamondDixie", "BitFortune", "leaderboard", "casino", "wager", "prizes", "Twitch", "gaming", "slots"],
-  authors: [{ name: "DiamondDixie" }],
+  title: "Streaming Shack BitFortune - $1000 Wager Leaderboard",
+  description: "Join Streaming Shack's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000. Leaderboard updates every 15 minutes. Watch live on Twitch!",
+  keywords: ["Streaming Shack", "BitFortune", "leaderboard", "casino", "wager", "prizes", "Twitch", "gaming", "slots"],
+  authors: [{ name: "Streaming Shack" }],
   openGraph: {
-    title: "DiamondDixie BitFortune - $1000 Wager Leaderboard",
-    description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000.",
+    title: "Streaming Shack BitFortune - $1000 Wager Leaderboard",
+    description: "Join Streaming Shack's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000. Leaderboard updates every 15 minutes.",
     type: "website",
-    siteName: "DiamondDixie BitFortune Leaderboard",
+    siteName: "Streaming Shack BitFortune Leaderboard",
     images: [
       {
-        url: "/Opengraph (1).png",
+        url: "/Opengraph (20).png",
         width: 1200,
         height: 630,
-        alt: "DiamondDixie BitFortune $1000 Wager Leaderboard",
+        alt: "Streaming Shack BitFortune $1000 Wager Leaderboard",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DiamondDixie BitFortune - $1000 Wager Leaderboard",
-    description: "Join DiamondDixie's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000.",
-    images: ["/Opengraph (1).png"],
+    title: "Streaming Shack BitFortune - $1000 Wager Leaderboard",
+    description: "Join Streaming Shack's $1000 Wager Leaderboard on BitFortune Casino. Compete for prizes up to $1000. Leaderboard updates every 15 minutes.",
+    images: ["/Opengraph (20).png"],
   },
   icons: {
     icon: [
