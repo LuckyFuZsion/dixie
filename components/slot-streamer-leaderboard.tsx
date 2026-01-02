@@ -61,10 +61,10 @@ function maskUsername(name: string): string {
 
 function createPlaceholders(): LeaderboardEntry[] {
   const prizeForRank = (rank: number): number => {
-    const map: Record<number, number> = { 1: 500, 2: 300, 3: 100, 4: 75, 5: 25 }
+    const map: Record<number, number> = { 1: 900, 2: 500, 3: 350, 4: 200, 5: 50 }
     return map[rank] ?? 0
   }
-  return Array.from({ length: 10 }, (_, i) => ({
+  return Array.from({ length: 20 }, (_, i) => ({
     id: `placeholder-${i + 1}`,
     username: "Awaiting player",
     wagered: 0,
@@ -213,7 +213,7 @@ async function reload(fromUnix: number, toUnix: number) {
 
     const sorted = [...base].sort((a, b) => b.wagered - a.wagered)
     const prizeForRank = (rank: number): number => {
-      const map: Record<number, number> = { 1: 500, 2: 300, 3: 100, 4: 75, 5: 25 }
+      const map: Record<number, number> = { 1: 900, 2: 500, 3: 350, 4: 200, 5: 50 }
       return map[rank] ?? 0
     }
 
@@ -223,9 +223,9 @@ async function reload(fromUnix: number, toUnix: number) {
       prize: prizeForRank(idx + 1),
     }))
 
-    // Ensure we always display 10 places
+    // Ensure we always display 20 places
     const padded: LeaderboardEntry[] = [...ranked]
-    for (let i = padded.length + 1; i <= 10; i++) {
+    for (let i = padded.length + 1; i <= 20; i++) {
       padded.push({
         id: `placeholder-${i}`,
         username: "Awaiting player",
@@ -236,7 +236,7 @@ async function reload(fromUnix: number, toUnix: number) {
     }
 
     // Update state and cache
-    setLeaderboardData(padded.slice(0, 10))
+    setLeaderboardData(padded.slice(0, 20))
     // Use Unix timestamps for cache key
     saveCache(fromUnix.toString(), toUnix.toString(), padded.slice(0, 10))
   } catch (err) {
@@ -347,14 +347,24 @@ async function reload(fromUnix: number, toUnix: number) {
   const topThree = leaderboardData.length >= 3 
     ? leaderboardData.slice(0, 3) 
     : [...leaderboardData, ...createPlaceholders().slice(0, 3 - leaderboardData.length)].slice(0, 3)
-  const rest = leaderboardData.slice(3, 10)
+  const rest = leaderboardData.slice(3, 20)
 
-  const formatPretty = (isoDate: string) =>
-    new Date(isoDate + "T00:00:00Z").toLocaleDateString(undefined, {
+  const formatPretty = (isoDate: string, unixTimestamp?: number) => {
+    // If Unix timestamp is provided, use it for accurate time; otherwise parse the date string
+    const date = unixTimestamp ? new Date(unixTimestamp * 1000) : new Date(isoDate + "T00:00:00Z")
+    const dateStr = date.toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
     })
+    const timeStr = date.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZoneName: "short",
+    })
+    return { date: dateStr, time: timeStr }
+  }
 
   const currency = (n: number) =>
     n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -373,7 +383,7 @@ async function reload(fromUnix: number, toUnix: number) {
               <Image src="/images/bitfortune-logo.svg" alt="BitFortune" width={390} height={56} className="opacity-90" />
             </a>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-wider drop-shadow-lg" style={{ fontFamily: 'var(--font-future)', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>$1000 Wager Leaderboard</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-wider drop-shadow-lg" style={{ fontFamily: 'var(--font-future)', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>$2000 Wager Leaderboard</h1>
           <p className="text-white text-sm italic drop-shadow-sm mb-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>The leaderboard updates every 15 minutes.</p>
           <p className="text-orange-400 text-xs font-semibold drop-shadow-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Note: No originals can be used at 1.01x for wagering</p>
         </div>
@@ -413,7 +423,7 @@ async function reload(fromUnix: number, toUnix: number) {
               id: `fallback-${idx}`,
               username: "Awaiting player",
               wagered: 0,
-              prize: idx === 0 ? 300 : idx === 1 ? 500 : 100,
+              prize: idx === 0 ? 500 : idx === 1 ? 900 : 350,
               rank: idx === 0 ? 2 : idx === 1 ? 1 : 3,
             }
             const isFirst = p.rank === 1
@@ -442,7 +452,20 @@ async function reload(fromUnix: number, toUnix: number) {
         {range.startAt && range.endAt && (
           <div className="text-center mb-8">
             <div className="text-white text-lg md:text-xl mb-3 drop-shadow-md" style={{ fontFamily: 'var(--font-future)', textShadow: '1px 1px 2px rgba(0,0,0,0.15)' }}>
-              {formatPretty(range.startAt)} <span className="mx-2 text-white">→</span> {formatPretty(range.endAt)}
+              {/* Mobile: Stack on 2 rows, Desktop: Single row */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-3 md:gap-2">
+                <div className="flex flex-col md:flex-row md:items-center">
+                  <span className="text-sm md:hidden mb-1 opacity-80">From:</span>
+                  <span className="font-bold">{formatPretty(range.startAt, range.fromUnix).date}</span>
+                  <span className="italic md:ml-2">{formatPretty(range.startAt, range.fromUnix).time}</span>
+                </div>
+                <span className="mx-2 text-white hidden md:inline">→</span>
+                <div className="flex flex-col md:flex-row md:items-center">
+                  <span className="text-sm md:hidden mb-1 opacity-80">To:</span>
+                  <span className="font-bold">{formatPretty(range.endAt, range.toUnix).date}</span>
+                  <span className="italic md:ml-2">{formatPretty(range.endAt, range.toUnix).time}</span>
+                </div>
+              </div>
             </div>
             <div className="flex items-center justify-center gap-2 text-white font-semibold mb-2 drop-shadow-sm" style={{ fontFamily: 'var(--font-future)', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>
               <span>⏱️</span>
