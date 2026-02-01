@@ -75,14 +75,19 @@ export default function AdminPage() {
   const formatSnapshot = (data: any): string => {
     const { leaderboard, dateRange, prizes } = data
     
-    let output = `🏆 **$2000 Wager Leaderboard** 🏆\n\n`
+    let output = `🏆 **4k Race** 🏆\n\n`
     output += `📅 **Period:** ${dateRange.start} ${dateRange.startTime} → ${dateRange.end} ${dateRange.endTime}\n\n`
     output += `💰 **Prize Pool:**\n`
     output += `🥇 1st: $${prizes[1]}\n`
     output += `🥈 2nd: $${prizes[2]}\n`
     output += `🥉 3rd: $${prizes[3]}\n`
     output += `4th: $${prizes[4]}\n`
-    output += `5th: $${prizes[5]}\n\n`
+    output += `5th: $${prizes[5]}\n`
+    output += `6th: $${prizes[6]}\n`
+    output += `7th: $${prizes[7]}\n`
+    output += `8th: $${prizes[8]}\n`
+    output += `9th: $${prizes[9]}\n`
+    output += `10th: $${prizes[10]}\n\n`
     output += `**Current Leaderboard:**\n\n`
     
     // Show top 20 or available players

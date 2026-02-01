@@ -61,7 +61,7 @@ function maskUsername(name: string): string {
 
 function createPlaceholders(): LeaderboardEntry[] {
   const prizeForRank = (rank: number): number => {
-    const map: Record<number, number> = { 1: 900, 2: 500, 3: 350, 4: 200, 5: 50 }
+    const map: Record<number, number> = { 1: 2000, 2: 1000, 3: 500, 4: 175, 5: 100, 6: 75, 7: 50, 8: 50, 9: 25, 10: 25 }
     return map[rank] ?? 0
   }
   return Array.from({ length: 20 }, (_, i) => ({
@@ -213,7 +213,7 @@ async function reload(fromUnix: number, toUnix: number) {
 
     const sorted = [...base].sort((a, b) => b.wagered - a.wagered)
     const prizeForRank = (rank: number): number => {
-      const map: Record<number, number> = { 1: 900, 2: 500, 3: 350, 4: 200, 5: 50 }
+      const map: Record<number, number> = { 1: 2000, 2: 1000, 3: 500, 4: 175, 5: 100, 6: 75, 7: 50, 8: 50, 9: 25, 10: 25 }
       return map[rank] ?? 0
     }
 
@@ -383,7 +383,7 @@ async function reload(fromUnix: number, toUnix: number) {
               <Image src="/images/bitfortune-logo.svg" alt="BitFortune" width={390} height={56} className="opacity-90" />
             </a>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-wider drop-shadow-lg" style={{ fontFamily: 'var(--font-future)', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>$2000 Wager Leaderboard</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-wider drop-shadow-lg" style={{ fontFamily: 'var(--font-future)', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>4k Race</h1>
           <p className="text-white text-sm italic drop-shadow-sm mb-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>The leaderboard updates every 15 minutes.</p>
           <p className="text-orange-400 text-xs font-semibold drop-shadow-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Note: No originals can be used at 1.01x for wagering</p>
         </div>
@@ -423,7 +423,7 @@ async function reload(fromUnix: number, toUnix: number) {
               id: `fallback-${idx}`,
               username: "Awaiting player",
               wagered: 0,
-              prize: idx === 0 ? 500 : idx === 1 ? 900 : 350,
+              prize: idx === 0 ? 1000 : idx === 1 ? 2000 : 500,
               rank: idx === 0 ? 2 : idx === 1 ? 1 : 3,
             }
             const isFirst = p.rank === 1

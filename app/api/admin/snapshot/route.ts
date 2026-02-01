@@ -123,7 +123,7 @@ export async function GET(request: Request) {
 
     // Prize mapping
     const prizeForRank = (rank: number): number => {
-      const map: Record<number, number> = { 1: 900, 2: 500, 3: 350, 4: 200, 5: 50 }
+      const map: Record<number, number> = { 1: 2000, 2: 1000, 3: 500, 4: 175, 5: 100, 6: 75, 7: 50, 8: 50, 9: 25, 10: 25 }
       return map[rank] ?? 0
     }
 
@@ -174,11 +174,16 @@ export async function GET(request: Request) {
         toUnix: to,
       },
       prizes: {
-        1: 900,
-        2: 500,
-        3: 350,
-        4: 200,
-        5: 50,
+        1: 2000,
+        2: 1000,
+        3: 500,
+        4: 175,
+        5: 100,
+        6: 75,
+        7: 50,
+        8: 50,
+        9: 25,
+        10: 25,
       },
     })
   } catch (error) {
