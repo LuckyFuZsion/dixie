@@ -11,6 +11,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [snapshotLoading, setSnapshotLoading] = useState(false)
   const [snapshotSuccess, setSnapshotSuccess] = useState(false)
+  const [discordLoading, setDiscordLoading] = useState(false)
+  const [discordSuccess, setDiscordSuccess] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -191,6 +193,25 @@ export default function AdminPage() {
     }
   }
 
+  const handlePushToDiscord = async () => {
+    setDiscordLoading(true)
+    setDiscordSuccess(false)
+    setError("")
+    try {
+      const response = await fetch("/api/admin/discord", { method: "POST" })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to send")
+      }
+      setDiscordSuccess(true)
+      setTimeout(() => setDiscordSuccess(false), 3000)
+    } catch (err: any) {
+      setError(err.message || "Error sending to Discord")
+    } finally {
+      setDiscordLoading(false)
+    }
+  }
+
   if (isAuthenticated === null) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
@@ -331,6 +352,36 @@ export default function AdminPage() {
                   {error}
                 </div>
               )}
+            </div>
+
+            <div className="bg-slate-700/50 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Discord Integration</h2>
+              <p className="text-slate-300 mb-4">
+                Push the current leaderboard directly to Discord. Usernames will be masked for privacy.
+              </p>
+              
+              <button
+                onClick={handlePushToDiscord}
+                disabled={discordLoading}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                {discordLoading ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    <span>Sending...</span>
+                  </>
+                ) : discordSuccess ? (
+                  <>
+                    <span>✓</span>
+                    <span>Sent to Discord!</span>
+                  </>
+                ) : (
+                  <>
+                    <span>💬</span>
+                    <span>Push to Discord</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
