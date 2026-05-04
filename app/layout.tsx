@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
@@ -9,6 +9,10 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 const SITE_TITLE = "Streaming Shack and Diamond Dixie 3K Wager Race"
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dixie-leaderboard.vercel.app"
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -47,22 +51,42 @@ export const metadata: Metadata = {
       "Streaming Shack and Diamond Dixie 3K Wager Race: climb the leaderboard for a share of $3,000. Updates every 15 minutes.",
     images: ["/og-image.png"],
   },
+  manifest: "/favicon_io/site.webmanifest",
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
+        url: "/favicon_io/favicon.ico",
+        type: "image/x-icon",
       },
       {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
+        url: "/favicon_io/favicon-16x16.png",
+        sizes: "16x16",
+        type: "image/png",
       },
       {
-        url: "/icon.svg",
-        type: "image/svg+xml",
+        url: "/favicon_io/favicon-32x32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        url: "/favicon_io/android-chrome-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/favicon_io/android-chrome-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
       },
     ],
-    apple: "/apple-icon.png",
+    shortcut: "/favicon_io/favicon.ico",
+    apple: [
+      {
+        url: "/favicon_io/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
 }
 

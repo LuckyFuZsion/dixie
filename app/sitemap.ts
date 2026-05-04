@@ -10,6 +10,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'hourly',
       priority: 1,
     },
+    {
+      url: `${baseUrl}/new`,
+      lastModified: new Date(),
+      changeFrequency: 'hourly',
+      priority: 0.8,
+    },
   ]
 }
 
