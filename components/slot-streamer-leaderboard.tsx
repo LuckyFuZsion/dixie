@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { Trophy } from "lucide-react"
+import {
+  DEFAULT_LEADERBOARD_END_DATE,
+  DEFAULT_LEADERBOARD_START_DATE,
+  isIsoDateString,
+  rangeFromIsoDates,
+} from "@/lib/leaderboard-dates"
 // removed local FuturisticBackground import; now global
 
 interface LeaderboardEntry {
@@ -59,9 +66,63 @@ function maskUsername(name: string): string {
   return `${start}***${end}`
 }
 
+function PodiumPlaceCard({
+  p,
+  currency,
+}: {
+  p: LeaderboardEntry
+  currency: (n: number) => string
+}) {
+  const ringClass =
+    p.rank === 1 ? "ring-2 ring-yellow-400" : p.rank === 2 ? "ring-2 ring-gray-300" : "ring-2 ring-amber-500"
+  const sizeClass = p.rank === 1 ? "h-72" : "h-64"
+  const prizeClass = "text-white"
+  return (
+    <div className={`relative group w-full max-w-[18rem] mx-auto ${sizeClass}`}>
+      <div className={`absolute inset-0 rounded-2xl ${ringClass} opacity-80`} />
+      <div className="relative h-full bg-black border border-zinc-800/50 rounded-2xl flex flex-col items-center justify-center text-center px-6 shadow-[0_0_20px_rgba(0,255,255,0.06)]">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center rounded-full bg-zinc-950/95 border border-white/15 px-2 py-1.5 shadow-lg ring-1 ring-white/10">
+          <PodiumTrophy rank={p.rank} />
+        </div>
+        <div className="mb-1 text-white text-2xl font-extrabold flex items-center gap-2" style={{ fontFamily: "var(--font-future)" }}>
+          <span>{maskUsername(p.username)}</span>
+        </div>
+        <div
+          className="mb-4 mt-1 bg-white/10 text-white font-bold px-4 py-2 rounded-full border border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.25)]"
+          style={{ fontFamily: "var(--font-future)" }}
+        >
+          ${currency(p.wagered)}
+        </div>
+        <div className="text-white text-xs uppercase tracking-widest mb-1" style={{ fontFamily: "var(--font-future)" }}>
+          Prize
+        </div>
+        <div className={`text-2xl font-black ${prizeClass}`} style={{ fontFamily: "var(--font-future)" }}>
+          ${p.prize}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PodiumTrophy({ rank }: { rank: number }) {
+  const trophyClass =
+    rank === 1
+      ? "w-8 h-8 sm:w-9 sm:h-9 text-amber-400 drop-shadow-[0_0_14px_rgba(251,191,36,0.7)]"
+      : rank === 2
+        ? "w-7 h-7 sm:w-8 sm:h-8 text-slate-200 drop-shadow-[0_0_12px_rgba(226,232,240,0.55)]"
+        : "w-7 h-7 sm:w-8 sm:h-8 text-amber-600 drop-shadow-[0_0_12px_rgba(217,119,6,0.55)]"
+  const label = rank === 1 ? "1st place" : rank === 2 ? "2nd place" : "3rd place"
+  return (
+    <span className="flex items-center justify-center" title={label}>
+      <Trophy className={trophyClass} strokeWidth={1.75} aria-hidden />
+      <span className="sr-only">{label}</span>
+    </span>
+  )
+}
+
 function createPlaceholders(): LeaderboardEntry[] {
   const prizeForRank = (rank: number): number => {
-    const map: Record<number, number> = { 1: 2000, 2: 1000, 3: 500, 4: 175, 5: 100, 6: 75, 7: 50, 8: 50, 9: 25, 10: 25 }
+    const map: Record<number, number> = { 1: 1500, 2: 800, 3: 450, 4: 250 }
     return map[rank] ?? 0
   }
   return Array.from({ length: 20 }, (_, i) => ({
@@ -90,100 +151,81 @@ export default function SlotStreamerLeaderboard() {
     return `${y}-${m}-${d}`
   }
 
-  function computeRolling12thRange() {
-    const now = new Date()
-    const currentMonth12th = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 12))
-    let startUTC: Date
-    let endUTC: Date
-    if (now >= currentMonth12th) {
-      startUTC = currentMonth12th
-      endUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 12))
-    } else {
-      startUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 12))
-      endUTC = currentMonth12th
-    }
-    endUTC.setUTCHours(23, 59, 59, 999)
-    return { startAt: formatYYYYMMDDUTC(startUTC), endAt: formatYYYYMMDDUTC(endUTC), endTimeMs: endUTC.getTime() }
-  }
-
   function computeActiveRange() {
     const LEADERBOARD_DURATION_DAYS = 28
-    
-    // Helper to calculate end date from start date (exactly 28 days later)
-    // Calculates: start date + exactly 28 days = end of day 28
-    const calculateEndDate = (startUnix: number) => {
+
+    const calculateEndDateUnix = (startUnix: number) => {
       const startDate = new Date(startUnix * 1000)
-      // Normalize start to beginning of day (00:00:00.000) for consistent calculation
-      const startOfDay = new Date(Date.UTC(
-        startDate.getUTCFullYear(),
-        startDate.getUTCMonth(),
-        startDate.getUTCDate(),
-        0, 0, 0, 0
-      ))
-      // Add exactly 28 days worth of milliseconds, then subtract 1ms to get end of day 28
-      // This gives us: day 1 00:00:00.000 to day 28 23:59:59.999 = exactly 28 days
-      const endDate = new Date(startOfDay.getTime() + (LEADERBOARD_DURATION_DAYS * 24 * 60 * 60 * 1000) - 1)
-      return {
-        endDate,
-        endUnix: Math.floor(endDate.getTime() / 1000),
-        endTimeMs: endDate.getTime()
-      }
+      const startOfDay = new Date(
+        Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate(), 0, 0, 0, 0)
+      )
+      const endDate = new Date(startOfDay.getTime() + LEADERBOARD_DURATION_DAYS * 24 * 60 * 60 * 1000 - 1)
+      return Math.floor(endDate.getTime() / 1000)
     }
 
-    // 1) URL overrides (Unix timestamp - only "from" needed, "to" is optional for backwards compatibility)
     if (typeof window !== "undefined") {
       const sp = new URLSearchParams(window.location.search)
+
+      const startQ = sp.get("start")
+      const endQ = sp.get("end")
+      if (startQ && endQ && isIsoDateString(startQ) && isIsoDateString(endQ)) {
+        return rangeFromIsoDates(startQ, endQ)
+      }
+
       const fromParam = sp.get("from")
       const toParam = sp.get("to")
-      if (fromParam) {
+      if (fromParam && /^\d+$/.test(fromParam.trim())) {
         const fromUnix = parseInt(fromParam, 10)
-        // If "to" is provided, use it (backwards compatibility), otherwise calculate from start + 28 days
         let toUnix: number
-        if (toParam) {
+        if (toParam && /^\d+$/.test(toParam.trim())) {
           toUnix = parseInt(toParam, 10)
         } else {
-          toUnix = calculateEndDate(fromUnix).endUnix
+          toUnix = calculateEndDateUnix(fromUnix)
         }
         const startDate = new Date(fromUnix * 1000)
         const endDate = new Date(toUnix * 1000)
-        return { 
-          startAt: formatYYYYMMDDUTC(startDate), 
-          endAt: formatYYYYMMDDUTC(endDate), 
+        return {
+          startAt: formatYYYYMMDDUTC(startDate),
+          endAt: formatYYYYMMDDUTC(endDate),
           endTimeMs: endDate.getTime(),
           fromUnix,
-          toUnix
+          toUnix,
         }
       }
     }
-    // 2) Public env overrides (Unix timestamp - only "from" needed)
+
+    const dateFrom =
+      process.env.NEXT_PUBLIC_LEADERBOARD_FROM_DATE ||
+      process.env.NEXT_PUBLIC_LEADERBOARD_DATE_FROM
+    const dateTo =
+      process.env.NEXT_PUBLIC_LEADERBOARD_TO_DATE || process.env.NEXT_PUBLIC_LEADERBOARD_DATE_TO
+    if (dateFrom && dateTo && isIsoDateString(dateFrom) && isIsoDateString(dateTo)) {
+      return rangeFromIsoDates(dateFrom, dateTo)
+    }
+
+    // Legacy: numeric Unix in env (optional)
     const envFrom = process.env.NEXT_PUBLIC_BITFORTUNE_FROM
     const envTo = process.env.NEXT_PUBLIC_BITFORTUNE_TO || process.env.NEXT_PUBLIC_BITFORTUNE_END_AT
-    if (envFrom) {
+    if (envFrom && /^\d+$/.test(envFrom.trim())) {
       const fromUnix = parseInt(envFrom, 10)
-      // If "to" is provided, use it (backwards compatibility), otherwise calculate from start + 28 days
       let toUnix: number
-      if (envTo) {
+      if (envTo && /^\d+$/.test(envTo.trim())) {
         toUnix = parseInt(envTo, 10)
       } else {
-        toUnix = calculateEndDate(fromUnix).endUnix
+        toUnix = calculateEndDateUnix(fromUnix)
       }
       const startDate = new Date(fromUnix * 1000)
       const endDate = new Date(toUnix * 1000)
-      return { 
-        startAt: formatYYYYMMDDUTC(startDate), 
-        endAt: formatYYYYMMDDUTC(endDate), 
+      return {
+        startAt: formatYYYYMMDDUTC(startDate),
+        endAt: formatYYYYMMDDUTC(endDate),
         endTimeMs: endDate.getTime(),
         fromUnix,
-        toUnix
+        toUnix,
       }
     }
-    // 3) Fallback rolling 12th
-    const rolling = computeRolling12thRange()
-    return { 
-      ...rolling, 
-      fromUnix: Math.floor(new Date(rolling.startAt + "T00:00:00Z").getTime() / 1000),
-      toUnix: Math.floor(rolling.endTimeMs / 1000)
-    }
+
+    return rangeFromIsoDates(DEFAULT_LEADERBOARD_START_DATE, DEFAULT_LEADERBOARD_END_DATE)
   }
 
 async function reload(fromUnix: number, toUnix: number) {
@@ -206,14 +248,21 @@ async function reload(fromUnix: number, toUnix: number) {
     const base: LeaderboardEntry[] = sourceArray.map((entry: any, index: number) => ({
       id: entry.id ?? `${index + 1}`,
       username: entry.username ?? entry.name ?? `Player${index + 1}`,
-      wagered: Number(entry.wagered ?? entry.wagered_amount ?? entry.totalWagered ?? 0),
+      wagered: Number(
+        entry.total_wager_usd ??
+          entry.wagered ??
+          entry.bets ??
+          entry.wagered_amount ??
+          entry.totalWagered ??
+          0
+      ),
       prize: 0,
       rank: index + 1,
     }))
 
     const sorted = [...base].sort((a, b) => b.wagered - a.wagered)
     const prizeForRank = (rank: number): number => {
-      const map: Record<number, number> = { 1: 2000, 2: 1000, 3: 500, 4: 175, 5: 100, 6: 75, 7: 50, 8: 50, 9: 25, 10: 25 }
+      const map: Record<number, number> = { 1: 1500, 2: 800, 3: 450, 4: 250 }
       return map[rank] ?? 0
     }
 
@@ -263,7 +312,7 @@ async function reload(fromUnix: number, toUnix: number) {
     setRange({ startAt, endAt, fromUnix, toUnix })
     setEndTimeMs(endTimeMs)
 
-    if (!fromUnix || !toUnix) {
+    if (!Number.isFinite(fromUnix) || !Number.isFinite(toUnix)) {
       setLeaderboardData(createPlaceholders())
       return
     }
@@ -317,7 +366,7 @@ async function reload(fromUnix: number, toUnix: number) {
   }
 
   function handleManualRefresh() {
-    if (!range.fromUnix || !range.toUnix) return
+    if (!Number.isFinite(range.fromUnix) || !Number.isFinite(range.toUnix)) return
     const now = Date.now()
     const nextAllowed = lastManualAt + MANUAL_COOLDOWN_MS
     if (now < nextAllowed) return
@@ -349,21 +398,11 @@ async function reload(fromUnix: number, toUnix: number) {
     : [...leaderboardData, ...createPlaceholders().slice(0, 3 - leaderboardData.length)].slice(0, 3)
   const rest = leaderboardData.slice(3, 20)
 
-  const formatPretty = (isoDate: string, unixTimestamp?: number) => {
-    // If Unix timestamp is provided, use it for accurate time; otherwise parse the date string
-    const date = unixTimestamp ? new Date(unixTimestamp * 1000) : new Date(isoDate + "T00:00:00Z")
-    const dateStr = date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-    const timeStr = date.toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      timeZoneName: "short",
-    })
-    return { date: dateStr, time: timeStr }
+  /** Display-only calendar labels (YYYY-MM-DD from range state). No Unix shown in UI. */
+  const formatCalendarDate = (isoYYYYMMDD: string) => {
+    const d = new Date(isoYYYYMMDD + "T12:00:00Z")
+    if (Number.isNaN(d.getTime())) return isoYYYYMMDD
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
   }
 
   const currency = (n: number) =>
@@ -380,112 +419,145 @@ async function reload(fromUnix: number, toUnix: number) {
               rel="noopener noreferrer"
               className="hover:opacity-100 transition-opacity"
             >
-              <Image src="/images/bitfortune-logo.svg" alt="BitFortune" width={390} height={56} className="opacity-90" />
+              <Image src="/bombastic-logo.png" alt="Bombastic" width={390} height={78} className="opacity-90" />
             </a>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-wider drop-shadow-lg" style={{ fontFamily: 'var(--font-future)', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>4k Race</h1>
+          <h1
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 tracking-wide drop-shadow-lg max-w-4xl mx-auto leading-tight px-2"
+            style={{ fontFamily: "var(--font-future)", textShadow: "2px 2px 4px rgba(0,0,0,0.2)" }}
+          >
+            Streaming Shack and Diamond Dixie 3K Wager Race
+          </h1>
+          <p className="text-cyan-100/90 text-sm md:text-base font-semibold tracking-wide mb-2" style={{ fontFamily: 'var(--font-future)' }}>
+            Fortnightly leaderboard
+          </p>
           <p className="text-white text-sm italic drop-shadow-sm mb-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>The leaderboard updates every 15 minutes.</p>
           <p className="text-orange-400 text-xs font-semibold drop-shadow-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>Note: No originals can be used at 1.01x for wagering</p>
         </div>
 
-        {/* Podium (mobile: stacked; desktop: 2-1-3 row) */}
-        {/* Mobile: show 1st → 2nd → 3rd */}
-        <div className="flex flex-col md:hidden justify-center items-stretch gap-4 mb-8">
-          {[0, 1, 2].map((idx) => {
-            const p = topThree[idx]
-            if (!p) return <div key={`empty-m-${idx}`} className="w-full max-w-[18rem] mx-auto" />
-            const isFirst = idx === 0
-            const sizeClass = isFirst ? "h-72" : "h-64"
-            const ringClass = isFirst ? "ring-2 ring-yellow-400" : idx === 1 ? "ring-2 ring-gray-300" : "ring-2 ring-amber-500"
-            const prizeClass = "text-white"
-            return (
-              <div key={`m-${p.id}`} className={`relative group w-full max-w-[18rem] mx-auto ${sizeClass}`}>
-                <div className={`absolute inset-0 rounded-2xl ${ringClass} opacity-80`} />
-                <div className="relative h-full bg-slate-900/50 backdrop-blur-md rounded-2xl border border-slate-600/30 flex flex-col items-center justify-center text-center px-6 shadow-[0_0_20px_rgba(0,255,255,0.10)]">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white/20 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow" style={{ fontFamily: 'var(--font-future)' }}>{p.rank}</div>
-                  <div className="mb-1 text-white text-2xl font-extrabold flex items-center gap-2" style={{ fontFamily: 'var(--font-future)' }}>
-                    {isFirst && <span className="text-white">🏆</span>}
-                    <span>{maskUsername(p.username)}</span>
-                  </div>
-                  <div className="mb-4 mt-1 bg-white/10 text-white font-bold px-4 py-2 rounded-full border border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.25)]" style={{ fontFamily: 'var(--font-future)' }}>${currency(p.wagered)}</div>
-                  <div className="text-white text-xs uppercase tracking-widest mb-1" style={{ fontFamily: 'var(--font-future)' }}>Prize</div>
-                  <div className={`text-2xl font-black ${prizeClass}`} style={{ fontFamily: 'var(--font-future)' }}>${p.prize}</div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Desktop: keep 2nd (left), 1st (center), 3rd (right) - FORCE VISIBLE */}
-        <div className="desktop-podium-container justify-center items-end gap-4 md:gap-6 lg:gap-8 mb-12 min-h-[320px] w-full px-4 relative z-10">
-          {[1, 0, 2].map((idx) => {
-            const p = topThree[idx] || {
-              id: `fallback-${idx}`,
-              username: "Awaiting player",
-              wagered: 0,
-              prize: idx === 0 ? 1000 : idx === 1 ? 2000 : 500,
-              rank: idx === 0 ? 2 : idx === 1 ? 1 : 3,
-            }
-            const isFirst = p.rank === 1
-            const sizeClass = isFirst ? "h-72 md:h-80 lg:h-80" : "h-64 md:h-72 lg:h-72"
-            const ringClass = isFirst ? "ring-2 ring-yellow-400" : p.rank === 2 ? "ring-2 ring-gray-300" : "ring-2 ring-amber-500"
-            const prizeClass = "text-white"
-            return (
-              <div key={`d-${p.id}`} className={`relative group w-64 md:w-72 lg:w-80 flex-shrink-0 ${sizeClass}`}>
-                <div className={`absolute inset-0 rounded-2xl ${ringClass} opacity-80`} />
-                <div className="relative h-full bg-slate-900/50 backdrop-blur-md rounded-2xl border border-slate-600/30 flex flex-col items-center justify-center text-center px-4 md:px-6 shadow-[0_0_20px_rgba(0,255,255,0.10)]">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white/20 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow" style={{ fontFamily: 'var(--font-future)' }}>{p.rank}</div>
-                  <div className="mb-1 text-white text-xl md:text-2xl font-extrabold flex items-center gap-2" style={{ fontFamily: 'var(--font-future)' }}>
-                    {isFirst && <span className="text-white">🏆</span>}
-                    <span>{maskUsername(p.username)}</span>
-                  </div>
-                  <div className="mb-4 mt-1 bg-white/10 text-white font-bold px-3 md:px-4 py-2 rounded-full border border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.25)] text-sm md:text-base" style={{ fontFamily: 'var(--font-future)' }}>${currency(p.wagered)}</div>
-                  <div className="text-white text-xs uppercase tracking-widest mb-1" style={{ fontFamily: 'var(--font-future)' }}>Prize</div>
-                  <div className={`text-2xl md:text-3xl font-black ${prizeClass}`} style={{ fontFamily: 'var(--font-future)' }}>${p.prize}</div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Date range and countdown */}
+        {/* Date range + countdown (above podium so always visible) */}
         {range.startAt && range.endAt && (
-          <div className="text-center mb-8">
-            <div className="text-white text-lg md:text-xl mb-3 drop-shadow-md" style={{ fontFamily: 'var(--font-future)', textShadow: '1px 1px 2px rgba(0,0,0,0.15)' }}>
-              {/* Mobile: Stack on 2 rows, Desktop: Single row */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-3 md:gap-2">
-                <div className="flex flex-col md:flex-row md:items-center">
-                  <span className="text-sm md:hidden mb-1 opacity-80">From:</span>
-                  <span className="font-bold">{formatPretty(range.startAt, range.fromUnix).date}</span>
-                  <span className="italic md:ml-2">{formatPretty(range.startAt, range.fromUnix).time}</span>
+          <div className="text-center mb-8 px-2">
+            <p className="text-white/80 text-xs uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-future)" }}>
+              Race period
+            </p>
+            <div
+              className="text-white text-base sm:text-lg md:text-xl mb-3 drop-shadow-md"
+              style={{ fontFamily: "var(--font-future)", textShadow: "1px 1px 2px rgba(0,0,0,0.15)" }}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 sm:gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                  <span className="text-white/70 text-sm">From</span>
+                  <span className="font-bold text-white">{formatCalendarDate(range.startAt)}</span>
                 </div>
-                <span className="mx-2 text-white hidden md:inline">→</span>
-                <div className="flex flex-col md:flex-row md:items-center">
-                  <span className="text-sm md:hidden mb-1 opacity-80">To:</span>
-                  <span className="font-bold">{formatPretty(range.endAt, range.toUnix).date}</span>
-                  <span className="italic md:ml-2">{formatPretty(range.endAt, range.toUnix).time}</span>
+                <span className="text-white/50 hidden sm:inline" aria-hidden>
+                  →
+                </span>
+                <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                  <span className="text-white/70 text-sm">To</span>
+                  <span className="font-bold text-white">{formatCalendarDate(range.endAt)}</span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2 text-white font-semibold mb-2 drop-shadow-sm" style={{ fontFamily: 'var(--font-future)', textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>
+            <div
+              className="flex items-center justify-center gap-2 text-white font-semibold mb-2 drop-shadow-sm"
+              style={{ fontFamily: "var(--font-future)", textShadow: "1px 1px 2px rgba(0,0,0,0.1)" }}
+            >
               <span>⏱️</span>
-              <span>Time Remaining:</span>
+              <span>Time remaining</span>
             </div>
-            <div className="grid grid-cols-4 gap-4 md:gap-6 max-w-xl mx-auto">
-              {([
-                { label: "days", value: timeLeft.days },
-                { label: "hours", value: timeLeft.hours },
-                { label: "mins", value: timeLeft.minutes },
-                { label: "secs", value: timeLeft.seconds },
-              ] as const).map((t) => (
+            <div className="grid grid-cols-4 gap-3 sm:gap-4 md:gap-6 max-w-xl mx-auto">
+              {(
+                [
+                  { label: "days", value: timeLeft.days },
+                  { label: "hours", value: timeLeft.hours },
+                  { label: "mins", value: timeLeft.minutes },
+                  { label: "secs", value: timeLeft.seconds },
+                ] as const
+              ).map((t) => (
                 <div key={t.label} className="text-center">
-                  <div className="text-3xl md:text-5xl font-extrabold text-white drop-shadow-lg" style={{ fontFamily: 'var(--font-future)', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>{t.value}</div>
-                  <div className="text-xs uppercase tracking-widest text-white drop-shadow-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>{t.label}</div>
+                  <div
+                    className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white drop-shadow-lg"
+                    style={{ fontFamily: "var(--font-future)", textShadow: "2px 2px 4px rgba(0,0,0,0.2)" }}
+                  >
+                    {t.value}
+                  </div>
+                  <div
+                    className="text-[10px] sm:text-xs uppercase tracking-widest text-white drop-shadow-sm"
+                    style={{ textShadow: "1px 1px 2px rgba(0,0,0,0.1)" }}
+                  >
+                    {t.label}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {/* Phone: stack 1 → 2 → 3 */}
+        <div className="flex flex-col md:hidden justify-center items-stretch gap-4 mb-8 px-1">
+          {[0, 1, 2].map((idx) => {
+            const p = topThree[idx]
+            if (!p) return <div key={`empty-m-${idx}`} className="w-full max-w-[18rem] mx-auto" />
+            return <PodiumPlaceCard key={`m-${p.id}`} p={p} currency={currency} />
+          })}
+        </div>
+
+        {/* Tablet: 1st row = winner; 2nd row = 2nd + 3rd side by side */}
+        <div className="hidden md:flex lg:hidden flex-col gap-4 mb-8 px-2 w-full max-w-3xl mx-auto">
+          {topThree[0] && (
+            <div className="flex justify-center w-full">
+              <PodiumPlaceCard p={topThree[0]} currency={currency} />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
+            {topThree[1] && (
+              <div className="min-w-0 flex justify-center">
+                <PodiumPlaceCard p={topThree[1]} currency={currency} />
+              </div>
+            )}
+            {topThree[2] && (
+              <div className="min-w-0 flex justify-center">
+                <PodiumPlaceCard p={topThree[2]} currency={currency} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="desktop-podium-container justify-center items-end gap-4 lg:gap-5 xl:gap-8 mb-12 min-h-[280px] lg:min-h-[320px] w-full max-w-full min-w-0 px-2 sm:px-4 lg:px-4 relative z-10 box-border">
+          {[1, 0, 2].map((idx) => {
+            const p = topThree[idx] || {
+              id: `fallback-${idx}`,
+              username: "Awaiting player",
+              wagered: 0,
+              prize: idx === 0 ? 800 : idx === 1 ? 1500 : 450,
+              rank: idx === 0 ? 2 : idx === 1 ? 1 : 3,
+            }
+            const isFirst = p.rank === 1
+            const sizeClass = isFirst ? "h-72 lg:h-80" : "h-64 lg:h-72"
+            const ringClass = isFirst ? "ring-2 ring-yellow-400" : p.rank === 2 ? "ring-2 ring-gray-300" : "ring-2 ring-amber-500"
+            const prizeClass = "text-white"
+            return (
+              <div
+                key={`d-${p.id}`}
+                className={`relative group w-52 flex-shrink-0 min-w-0 xl:w-64 2xl:w-72 ${sizeClass}`}
+              >
+                <div className={`absolute inset-0 rounded-2xl ${ringClass} opacity-80`} />
+                <div className="relative h-full bg-black border border-zinc-800/50 rounded-2xl flex flex-col items-center justify-center text-center px-2 sm:px-4 lg:px-6 shadow-[0_0_20px_rgba(0,255,255,0.06)]">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center rounded-full bg-zinc-950/95 border border-white/15 px-2 py-1.5 shadow-lg ring-1 ring-white/10">
+                    <PodiumTrophy rank={p.rank} />
+                  </div>
+                  <div className="mb-1 text-white text-lg lg:text-xl xl:text-2xl font-extrabold flex items-center justify-center gap-1 sm:gap-2 flex-wrap px-1" style={{ fontFamily: 'var(--font-future)' }}>
+                    <span className="max-w-full break-words">{maskUsername(p.username)}</span>
+                  </div>
+                  <div className="mb-4 mt-1 bg-white/10 text-white font-bold px-2 sm:px-4 py-2 rounded-full border border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.25)] text-xs sm:text-sm lg:text-base max-w-[min(100%,11rem)] mx-auto" style={{ fontFamily: 'var(--font-future)' }}>${currency(p.wagered)}</div>
+                  <div className="text-white text-xs uppercase tracking-widest mb-1" style={{ fontFamily: 'var(--font-future)' }}>Prize</div>
+                  <div className={`text-xl lg:text-2xl xl:text-3xl font-black ${prizeClass}`} style={{ fontFamily: 'var(--font-future)' }}>${p.prize}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
 
         {/* Header row with refresh */}
         <div className="flex items-center justify-end mb-4 pr-0 md:pr-2 gap-3">
@@ -506,7 +578,7 @@ async function reload(fromUnix: number, toUnix: number) {
           {rest.map((p) => (
             <div key={p.id} className="relative group w-full max-w-[64rem] mx-2 md:mx-4">
               <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 via-amber-600 to-red-600 rounded-2xl blur-sm opacity-20 group-hover:opacity-40 transition" />
-              <div className="relative bg-slate-800/60 backdrop-blur-md rounded-2xl px-4 md:px-6 py-4 md:py-5 border border-slate-600/50 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-[0_0_20px_rgba(251,146,60,0.10)]">
+              <div className="relative bg-black rounded-2xl px-4 md:px-6 py-4 md:py-5 border border-zinc-800/60 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-[0_0_20px_rgba(251,146,60,0.08)]">
                 <div className="flex items-center gap-2 md:gap-4">
                   <div className="text-white text-base font-extrabold w-10 text-center" style={{ fontFamily: 'var(--font-future)' }}>#{p.rank}</div>
                   {p.prize > 0 && (

@@ -40,19 +40,13 @@ export async function POST(request: Request) {
     const { leaderboard, dateRange, prizes } = data
 
     // 3. Format the Discord Message
-    let discordMessage = `🏆 **4k Race** 🏆\n\n`
+    let discordMessage = `🏆 **Streaming Shack and Diamond Dixie 3K Wager Race** 🏆\n\n`
     discordMessage += `📅 **Period:** ${dateRange.start} ${dateRange.startTime} → ${dateRange.end} ${dateRange.endTime}\n\n`
-    discordMessage += `💰 **Prize Pool:**\n`
+    discordMessage += `💰 **Prize Pool ($3,000):**\n`
     discordMessage += `🥇 1st: $${prizes[1]}\n`
     discordMessage += `🥈 2nd: $${prizes[2]}\n`
     discordMessage += `🥉 3rd: $${prizes[3]}\n`
-    discordMessage += `4th: $${prizes[4]}\n`
-    discordMessage += `5th: $${prizes[5]}\n`
-    discordMessage += `6th: $${prizes[6]}\n`
-    discordMessage += `7th: $${prizes[7]}\n`
-    discordMessage += `8th: $${prizes[8]}\n`
-    discordMessage += `9th: $${prizes[9]}\n`
-    discordMessage += `10th: $${prizes[10]}\n\n`
+    discordMessage += `4th: $${prizes[4]}\n\n`
     discordMessage += `**Current Standings:**\n\n`
     
     leaderboard.slice(0, 20).forEach((player: any) => {

@@ -7,30 +7,45 @@ import "./globals.css"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
+const SITE_TITLE = "Streaming Shack and Diamond Dixie 3K Wager Race"
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dixie-leaderboard.vercel.app"
+
 export const metadata: Metadata = {
-  title: "Streaming Shack BitFortune - 4k Race",
-  description: "Join Streaming Shack's 4k Race on BitFortune Casino. Compete for prizes up to $2000. Leaderboard updates every 15 minutes. Watch live on Twitch!",
-  keywords: ["Streaming Shack", "BitFortune", "leaderboard", "casino", "wager", "prizes", "Twitch", "gaming", "slots"],
-  authors: [{ name: "Streaming Shack" }],
+  metadataBase: new URL(siteUrl),
+  title: SITE_TITLE,
+  description:
+    "Streaming Shack and Diamond Dixie 3K Wager Race leaderboard: $3,000 prize pool, 4 winners. Leaderboard updates every 15 minutes. Watch live on Twitch!",
+  keywords: [
+    "Streaming Shack",
+    "Diamond Dixie",
+    "leaderboard",
+    "3K Wager Race",
+    "wager race",
+    "prizes",
+    "Twitch",
+    "gaming",
+    "slots",
+  ],
+  authors: [{ name: "Streaming Shack" }, { name: "Diamond Dixie" }],
   openGraph: {
-    title: "Streaming Shack BitFortune - 4k Race",
-    description: "Join Streaming Shack's 4k Race on BitFortune Casino. Compete for prizes up to $2000. Leaderboard updates every 15 minutes.",
+    title: SITE_TITLE,
+    description:
+      "Streaming Shack and Diamond Dixie 3K Wager Race: climb the leaderboard for a share of $3,000. Updates every 15 minutes.",
     type: "website",
-    siteName: "Streaming Shack BitFortune Leaderboard",
+    siteName: "Streaming Shack and Diamond Dixie",
     images: [
       {
-        url: "/Opengraph (20).png",
-        width: 1200,
-        height: 630,
-        alt: "Streaming Shack BitFortune 4k Race",
+        url: "/og-image.png",
+        alt: "Streaming Shack and Diamond Dixie 3K Wager Race — 3K wager race promotional banner",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Streaming Shack BitFortune - 4k Race",
-    description: "Join Streaming Shack's 4k Race on BitFortune Casino. Compete for prizes up to $2000. Leaderboard updates every 15 minutes.",
-    images: ["/Opengraph (20).png"],
+    title: SITE_TITLE,
+    description:
+      "Streaming Shack and Diamond Dixie 3K Wager Race: climb the leaderboard for a share of $3,000. Updates every 15 minutes.",
+    images: ["/og-image.png"],
   },
   icons: {
     icon: [

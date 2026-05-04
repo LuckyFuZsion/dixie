@@ -253,12 +253,12 @@
   }
 }
 
-/* FORCE DESKTOP PODIUM TO SHOW */
+/* Horizontal podium only at lg+ — tablets (md) use stacked layout to avoid overflow */
 .desktop-podium-container {
   display: none !important;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .desktop-podium-container {
     display: flex !important;
   }
