@@ -78,7 +78,7 @@ export default function SlotStreamerLeaderboard() {
         <div className="text-center mb-10">
           <div className="flex justify-center mb-6">
             <a
-              href="https://affiliates.bitfortune.com/workspaces/api/tracking-links/record?trackingLinkId=11&affiliateId=271"
+              href="https://bombastic.com/?ref=diamonddixie"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:opacity-100 transition-opacity"

@@ -198,7 +198,7 @@ export default function LeaderboardNeo() {
           <div className="pt-2">
             <div className="mb-8 flex flex-col items-center sm:flex-row sm:items-start sm:gap-8">
               <a
-                href="https://affiliates.bitfortune.com/workspaces/api/tracking-links/record?trackingLinkId=11&affiliateId=271"
+                href="https://bombastic.com/?ref=diamonddixie"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 transition-opacity hover:opacity-100"
@@ -241,7 +241,7 @@ export default function LeaderboardNeo() {
         <div className="relative z-10 hidden gap-10 lg:grid lg:grid-cols-[minmax(260px,340px)_minmax(0,1fr)] lg:items-start lg:gap-x-12 xl:gap-x-14">
           <div className="flex flex-col gap-8 pt-6">
             <a
-              href="https://affiliates.bitfortune.com/workspaces/api/tracking-links/record?trackingLinkId=11&affiliateId=271"
+              href="https://bombastic.com/?ref=diamonddixie"
               target="_blank"
               rel="noopener noreferrer"
               className="shrink-0 transition-opacity hover:opacity-100"

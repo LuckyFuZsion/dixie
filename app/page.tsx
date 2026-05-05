@@ -59,7 +59,7 @@ export default function GamerPage() {
             </a>
 
             <a
-              href="https://affiliates.bitfortune.com/workspaces/api/tracking-links/record?trackingLinkId=11&affiliateId=271"
+              href="https://bombastic.com/?ref=diamonddixie"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:opacity-100 transition-opacity"

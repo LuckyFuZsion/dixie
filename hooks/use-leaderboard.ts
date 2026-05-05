@@ -21,7 +21,6 @@ interface CachedLeaderboard {
   updatedAt: number
 }
 
-const CACHE_TTL_MS = 15 * 60 * 1000
 const MANUAL_COOLDOWN_MS = 10 * 60 * 1000
 
 function makeCacheKey(startAt: string, endAt: string): string {
@@ -47,11 +46,6 @@ function readCache(startAt: string, endAt: string): CachedLeaderboard | null {
   } catch {
     return null
   }
-}
-
-function isFresh(cache: CachedLeaderboard | null): boolean {
-  if (!cache) return false
-  return Date.now() - cache.updatedAt < CACHE_TTL_MS
 }
 
 export function maskUsername(name: string): string {
@@ -176,7 +170,14 @@ export function useLeaderboard() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/leaderboard?from=${fromUnix}&to=${toUnix}`, { cache: "no-store" })
+      const cacheBust = Date.now()
+      const response = await fetch(`/api/leaderboard?from=${fromUnix}&to=${toUnix}&cb=${cacheBust}`, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      })
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`)
       }
@@ -256,13 +257,8 @@ export function useLeaderboard() {
       return
     }
 
-    const cached = readCache(fromUnix.toString(), toUnix.toString())
-    if (isFresh(cached) && cached!.data.length > 0) {
-      setLeaderboardData(cached!.data)
-      setLoading(false)
-    } else {
-      setLeaderboardData(createPlaceholders())
-    }
+    // Always fetch fresh data on page load; localStorage cache is only used as an error fallback.
+    setLeaderboardData(createPlaceholders())
 
     try {
       const raw = localStorage.getItem(makeManualKey(fromUnix.toString(), toUnix.toString()))

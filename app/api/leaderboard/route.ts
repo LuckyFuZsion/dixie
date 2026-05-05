@@ -25,7 +25,17 @@ export async function GET() {
     })
 
     if (!response.ok) {
-      return NextResponse.json({ error: `Upstream error ${response.status}` }, { status: response.status })
+      return NextResponse.json(
+        { error: `Upstream error ${response.status}` },
+        {
+          status: response.status,
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        }
+      )
     }
 
     const data = await response.json()
@@ -45,9 +55,25 @@ export async function GET() {
       rank: idx + 1,
     }))
 
-    return NextResponse.json(ranked)
+    return NextResponse.json(ranked, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    })
   } catch (error) {
     console.error("Error fetching leaderboard:", error)
-    return NextResponse.json({ error: "Failed to fetch leaderboard" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to fetch leaderboard" },
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    )
   }
 }
