@@ -12,7 +12,12 @@ import {
 } from "@/lib/leaderboard-variants"
 
 /** Bump when OG assets change so social crawlers fetch fresh previews. */
-const OG_IMAGE_CACHE_VERSION = "2"
+const OG_IMAGE_CACHE_VERSION = "4"
+
+const OG_SITE_NAMES: Record<SnapshotVariantId, string> = {
+  bombastic: "Streaming Shack and Diamond Dixie",
+  bitfortune: "Streaming Shack",
+}
 
 const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
   bombastic: {
@@ -20,7 +25,7 @@ const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
     alt: "Streaming Shack and Diamond Dixie 3K Wager Race — Bombastic promotional banner",
   },
   bitfortune: {
-    path: "/images/og-img-bitfortune.png",
+    path: "/images/og-bitfortune.png",
     alt: "Streaming Shack 5K Wager Race — BitFortune promotional banner",
   },
 }
@@ -85,6 +90,7 @@ export function buildLeaderboardSocialMetadata(
       title,
       description,
       type: "website",
+      siteName: OG_SITE_NAMES[variantId],
       images: [{ url: imageUrl, alt: ogImage.alt }],
     },
     twitter: {
