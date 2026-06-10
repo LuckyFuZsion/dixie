@@ -13,7 +13,11 @@ interface Particle {
   twinkleOffset: number
 }
 
-export default function FuturisticBackground() {
+type FuturisticBackgroundProps = {
+  variant?: "default" | "bitfortune"
+}
+
+export default function FuturisticBackground({ variant = "default" }: FuturisticBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const rafRef = useRef<number | null>(null)
 
@@ -62,8 +66,11 @@ export default function FuturisticBackground() {
       ctx.fillStyle = "rgba(15, 23, 42, 0.05)"
       ctx.fillRect(0, 0, width, height)
 
+      const lineColor =
+        variant === "bitfortune" ? "rgba(247, 187, 38, 0.3)" : "rgba(251, 146, 60, 0.3)"
+
       // Draw connecting lines between nearby particles - make more visible
-      ctx.strokeStyle = "rgba(251, 146, 60, 0.3)"
+      ctx.strokeStyle = lineColor
       ctx.lineWidth = 1
       ctx.globalAlpha = 0.3
 
@@ -103,16 +110,11 @@ export default function FuturisticBackground() {
         ctx.save()
         ctx.globalAlpha = alpha
 
-        // Masculine colors - orange, amber, red shades
-        const masculineShades = [
-          "#F97316", // Orange
-          "#FB923C", // Orange-400
-          "#F59E0B", // Amber
-          "#EF4444", // Red
-          "#EA580C", // Orange-600
-          "#DC2626", // Red-600
-        ]
-        const masculineColor = masculineShades[Math.floor((particle.x + particle.y + t * 0.1) % masculineShades.length)]
+        const particleShades =
+          variant === "bitfortune"
+            ? ["#F7BB26", "#FFD666", "#E5A820", "#C8941A", "#FFF8E7", "#D4A017"]
+            : ["#F97316", "#FB923C", "#F59E0B", "#EF4444", "#EA580C", "#DC2626"]
+        const masculineColor = particleShades[Math.floor((particle.x + particle.y + t * 0.1) % particleShades.length)]
 
         // Outer glow - make brighter
         ctx.shadowColor = masculineColor
@@ -167,7 +169,7 @@ export default function FuturisticBackground() {
       window.removeEventListener("resize", resize)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [])
+  }, [variant])
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">

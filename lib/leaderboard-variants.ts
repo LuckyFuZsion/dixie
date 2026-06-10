@@ -93,7 +93,7 @@ export const SNAPSHOT_VARIANTS: Record<SnapshotVariantId, SnapshotVariantMeta> =
   },
   bitfortune: {
     ...BITFORTUNE_STREAMER_VARIANT,
-    title: "Streaming Shack and Diamond Dixie 5K Wager Race",
+    title: "Streaming Shack 5K Wager Race",
     prizePoolTotal: 5000,
   },
 }

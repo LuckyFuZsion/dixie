@@ -1,10 +1,14 @@
 import type { Metadata } from "next"
 import type { ReactNode } from "react"
+import { buildLeaderboardSocialMetadata } from "@/lib/leaderboard-metadata"
 
-export const metadata: Metadata = {
-  title: "Neo leaderboard · Streaming Shack and Diamond Dixie 3K Wager Race",
-  description:
-    "Alternate futuristic UI for the 3K wager race leaderboard—same data and schedule as the classic view.",
+export const dynamic = "force-dynamic"
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildLeaderboardSocialMetadata("bombastic", {
+    titlePrefix: "Neo leaderboard",
+    descriptionLead: "Alternate futuristic UI for the",
+  })
 }
 
 export default function NewLeaderboardLayout({ children }: { children: ReactNode }) {

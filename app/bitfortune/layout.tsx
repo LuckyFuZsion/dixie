@@ -1,10 +1,23 @@
 import type { Metadata } from "next"
 import type { ReactNode } from "react"
+import { buildLeaderboardSocialMetadata } from "@/lib/leaderboard-metadata"
 
-export const metadata: Metadata = {
-  title: "BitFortune leaderboard · Streaming Shack and Diamond Dixie 5K Wager Race",
-  description:
-    "BitFortune streamer wager race leaderboard with a $5,000 prize pool. Updates every 15 minutes.",
+export const dynamic = "force-dynamic"
+
+export async function generateMetadata(): Promise<Metadata> {
+  const social = buildLeaderboardSocialMetadata("bitfortune")
+
+  return {
+    ...social,
+    keywords: [
+      "BitFortune",
+      "Streaming Shack",
+      "leaderboard",
+      "5K Wager Race",
+      "wager race",
+      "streamer",
+    ],
+  }
 }
 
 export default function BitfortuneLeaderboardLayout({ children }: { children: ReactNode }) {
