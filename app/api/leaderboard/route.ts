@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server"
+import { resolveLeaderboardRange } from "@/lib/leaderboard-dates"
 
 /**
- * Affiliate export JSON (full snapshot). Does not accept date filters — race dates only affect UI countdown via env.
+ * Affiliate export JSON (full snapshot). Race dates are resolved server-side and returned with the payload.
  * @see https://exportdata.xcdn.tech/bombastic-affiliate-leaderboard-export/3633/1960940194/304548477.json
  */
 const DEFAULT_LEADERBOARD_EXPORT_URL =
   "https://exportdata.xcdn.tech/bombastic-affiliate-leaderboard-export/3633/1960940194/304548477.json"
+
+const noStoreHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+}
 
 type ExportRow = {
   playerId?: number
@@ -15,8 +22,11 @@ type ExportRow = {
   cashouts?: number
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const reqUrl = new URL(request.url)
+    const range = resolveLeaderboardRange(reqUrl.searchParams)
+
     const exportUrl = process.env.LEADERBOARD_EXPORT_URL || DEFAULT_LEADERBOARD_EXPORT_URL
 
     const response = await fetch(exportUrl, {
@@ -29,11 +39,7 @@ export async function GET() {
         { error: `Upstream error ${response.status}` },
         {
           status: response.status,
-          headers: {
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
+          headers: noStoreHeaders,
         }
       )
     }
@@ -55,24 +61,20 @@ export async function GET() {
       rank: idx + 1,
     }))
 
-    return NextResponse.json(ranked, {
-      headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+    return NextResponse.json(
+      {
+        leaderboard: ranked,
+        range,
       },
-    })
+      { headers: noStoreHeaders }
+    )
   } catch (error) {
     console.error("Error fetching leaderboard:", error)
     return NextResponse.json(
       { error: "Failed to fetch leaderboard" },
       {
         status: 500,
-        headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
+        headers: noStoreHeaders,
       }
     )
   }

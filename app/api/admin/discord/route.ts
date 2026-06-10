@@ -1,76 +1,37 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-
-// Helper to mask usernames: "Username" -> `US****me` (maintains original length)
-const maskUsername = (username: string): string => {
-  if (username === "Awaiting player" || username.length <= 4) {
-    return username
-  }
-  const originalLength = username.length
-  const firstTwo = username.slice(0, 2).toUpperCase()
-  const lastTwo = username.slice(-2)
-  const asterisks = "*".repeat(Math.max(0, originalLength - 4))
-  return `${firstTwo}${asterisks}${lastTwo}`
-}
+import { buildLeaderboardSnapshot, formatSnapshotMessage } from "@/lib/leaderboard-snapshot"
 
 export async function POST(request: Request) {
   try {
-    // 1. Check Authentication (Matches your existing admin auth)
     const cookieStore = await cookies()
     const authCookie = cookieStore.get("admin-auth")
     if (authCookie?.value !== "authenticated") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // 2. Fetch Leaderboard Data
-    // We call the existing snapshot API to get the current data
-    const reqUrl = new URL(request.url)
-    const baseUrl = `${reqUrl.protocol}//${reqUrl.host}`
-    // Forward the auth cookie to the internal API call
-    const cookieValue = authCookie.value
-    const snapshotResponse = await fetch(`${baseUrl}/api/admin/snapshot`, {
-      headers: { Cookie: `admin-auth=${cookieValue}` }
-    })
-    
-    if (!snapshotResponse.ok) {
-      throw new Error("Failed to fetch leaderboard snapshot")
+    let variant: string | undefined
+    try {
+      const body = await request.json()
+      variant = typeof body?.variant === "string" ? body.variant : undefined
+    } catch {
+      variant = undefined
     }
 
-    const data = await snapshotResponse.json()
-    const { leaderboard, dateRange, prizes } = data
+    const reqUrl = new URL(request.url)
+    const searchParams = new URLSearchParams(reqUrl.searchParams)
+    if (variant) {
+      searchParams.set("variant", variant)
+    }
 
-    // 3. Format the Discord Message
-    let discordMessage = `🏆 **Streaming Shack and Diamond Dixie 3K Wager Race** 🏆\n\n`
-    discordMessage += `📅 **Period:** ${dateRange.start} ${dateRange.startTime} → ${dateRange.end} ${dateRange.endTime}\n\n`
-    discordMessage += `💰 **Prize Pool ($3,000):**\n`
-    discordMessage += `🥇 1st: $${prizes[1]}\n`
-    discordMessage += `🥈 2nd: $${prizes[2]}\n`
-    discordMessage += `🥉 3rd: $${prizes[3]}\n`
-    discordMessage += `4th: $${prizes[4]}\n\n`
-    discordMessage += `**Current Standings:**\n\n`
-    
-    leaderboard.slice(0, 20).forEach((player: any) => {
-      const medal = player.rank === 1 ? "🥇" : player.rank === 2 ? "🥈" : player.rank === 3 ? "🥉" : ""
-      const rankStr = medal ? `${medal} **${player.rank}.**` : `${player.rank}.`
-      
-      if (player.username === "Awaiting player" || player.wagered === 0) {
-        discordMessage += `${rankStr} *Awaiting player*${player.prize > 0 ? ` | Prize: **$${player.prize}**` : ""}\n`
-      } else {
-        // Wrap masked username in backticks to prevent Discord markdown issues
-        const masked = maskUsername(player.username)
-        const wagered = player.wagered.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        discordMessage += `${rankStr} \`${masked}\` - $${wagered}${player.prize > 0 ? ` | Prize: **$${player.prize}**` : ""}\n`
-      }
-    })
-    
-    discordMessage += `\n---\n*Updated: ${new Date().toLocaleString()}*`
+    const snapshot = await buildLeaderboardSnapshot(searchParams.get("variant"), searchParams)
+    const discordMessage = formatSnapshotMessage(snapshot, { maskUsernames: true })
 
-    // 4. Send to Webhook
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL
     if (!webhookUrl) {
       return NextResponse.json({ error: "Discord webhook URL not configured" }, { status: 500 })
     }
-    
+
     const discordResponse = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -81,10 +42,10 @@ export async function POST(request: Request) {
       throw new Error("Discord API returned an error")
     }
 
-    return NextResponse.json({ success: true })
-  } catch (error: any) {
+    return NextResponse.json({ success: true, variant: snapshot.variant })
+  } catch (error) {
     console.error("Discord Error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const message = error instanceof Error ? error.message : "Failed to send to Discord"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
-

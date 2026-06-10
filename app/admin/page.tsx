@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import type { SnapshotVariantId } from "@/lib/leaderboard-variants"
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
@@ -11,8 +12,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [snapshotLoading, setSnapshotLoading] = useState(false)
   const [snapshotSuccess, setSnapshotSuccess] = useState(false)
-  const [discordLoading, setDiscordLoading] = useState(false)
-  const [discordSuccess, setDiscordSuccess] = useState(false)
+  const [selectedVariant, setSelectedVariant] = useState<SnapshotVariantId>("bombastic")
+  const [discordLoading, setDiscordLoading] = useState<SnapshotVariantId | null>(null)
+  const [discordSuccess, setDiscordSuccess] = useState<SnapshotVariantId | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -75,11 +77,11 @@ export default function AdminPage() {
   }
 
   const formatSnapshot = (data: any): string => {
-    const { leaderboard, dateRange, prizes } = data
+    const { leaderboard, dateRange, prizes, title, prizePoolTotal } = data
     
-    let output = `🏆 **Streaming Shack and Diamond Dixie 3K Wager Race** 🏆\n\n`
+    let output = `🏆 **${title}** 🏆\n\n`
     output += `📅 **Period:** ${dateRange.start} ${dateRange.startTime} → ${dateRange.end} ${dateRange.endTime}\n\n`
-    output += `💰 **Prize Pool ($3,000):**\n`
+    output += `💰 **Prize Pool ($${Number(prizePoolTotal).toLocaleString()}):**\n`
     output += `🥇 1st: $${prizes[1]}\n`
     output += `🥈 2nd: $${prizes[2]}\n`
     output += `🥉 3rd: $${prizes[3]}\n`
@@ -109,22 +111,20 @@ export default function AdminPage() {
   }
 
   const getSnapshotUrl = () => {
-    // Get date parameters from current URL if present
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search)
-      const from = params.get("from")
-      const to = params.get("to")
-      
-      if (from) {
-        const url = new URL("/api/admin/snapshot", window.location.origin)
-        url.searchParams.set("from", from)
-        if (to) {
-          url.searchParams.set("to", to)
-        }
-        return url.toString()
+    const url = new URL("/api/admin/snapshot", window.location.origin)
+    url.searchParams.set("variant", selectedVariant)
+
+    const params = new URLSearchParams(window.location.search)
+    const from = params.get("from")
+    const to = params.get("to")
+    if (from) {
+      url.searchParams.set("from", from)
+      if (to) {
+        url.searchParams.set("to", to)
       }
     }
-    return "/api/admin/snapshot"
+
+    return url.toString()
   }
 
   const handleCopySnapshot = async () => {
@@ -172,7 +172,7 @@ export default function AdminPage() {
       const blobUrl = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = blobUrl
-      a.download = `leaderboard-snapshot-${new Date().toISOString().split("T")[0]}.txt`
+      a.download = `leaderboard-snapshot-${selectedVariant}-${new Date().toISOString().split("T")[0]}.txt`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -187,22 +187,26 @@ export default function AdminPage() {
     }
   }
 
-  const handlePushToDiscord = async () => {
-    setDiscordLoading(true)
-    setDiscordSuccess(false)
+  const handlePushToDiscord = async (variant: SnapshotVariantId) => {
+    setDiscordLoading(variant)
+    setDiscordSuccess(null)
     setError("")
     try {
-      const response = await fetch("/api/admin/discord", { method: "POST" })
+      const response = await fetch("/api/admin/discord", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variant }),
+      })
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.error || "Failed to send")
       }
-      setDiscordSuccess(true)
-      setTimeout(() => setDiscordSuccess(false), 3000)
+      setDiscordSuccess(variant)
+      setTimeout(() => setDiscordSuccess(null), 3000)
     } catch (err: any) {
       setError(err.message || "Error sending to Discord")
     } finally {
-      setDiscordLoading(false)
+      setDiscordLoading(null)
     }
   }
 
@@ -297,6 +301,31 @@ export default function AdminPage() {
               <p className="text-slate-300 mb-4">
                 Take a snapshot of the current leaderboard with dates and prizes. Perfect for sharing in Discord or elsewhere.
               </p>
+
+              <div className="mb-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedVariant("bombastic")}
+                  className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+                    selectedVariant === "bombastic"
+                      ? "bg-orange-600 text-white"
+                      : "bg-slate-600/80 text-slate-200 hover:bg-slate-600"
+                  }`}
+                >
+                  Bombastic (3K)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedVariant("bitfortune")}
+                  className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+                    selectedVariant === "bitfortune"
+                      ? "bg-orange-600 text-white"
+                      : "bg-slate-600/80 text-slate-200 hover:bg-slate-600"
+                  }`}
+                >
+                  BitFortune (5K)
+                </button>
+              </div>
               
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
@@ -354,28 +383,53 @@ export default function AdminPage() {
                 Push the current leaderboard directly to Discord. Usernames will be masked for privacy.
               </p>
               
-              <button
-                onClick={handlePushToDiscord}
-                disabled={discordLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-              >
-                {discordLoading ? (
-                  <>
-                    <span className="animate-spin">⏳</span>
-                    <span>Sending...</span>
-                  </>
-                ) : discordSuccess ? (
-                  <>
-                    <span>✓</span>
-                    <span>Sent to Discord!</span>
-                  </>
-                ) : (
-                  <>
-                    <span>💬</span>
-                    <span>Push to Discord</span>
-                  </>
-                )}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => handlePushToDiscord("bombastic")}
+                  disabled={discordLoading !== null}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  {discordLoading === "bombastic" ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>Sending...</span>
+                    </>
+                  ) : discordSuccess === "bombastic" ? (
+                    <>
+                      <span>✓</span>
+                      <span>Bombastic sent!</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>💬</span>
+                      <span>Push Bombastic (3K)</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handlePushToDiscord("bitfortune")}
+                  disabled={discordLoading !== null}
+                  className="flex-1 bg-violet-600 hover:bg-violet-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  {discordLoading === "bitfortune" ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>Sending...</span>
+                    </>
+                  ) : discordSuccess === "bitfortune" ? (
+                    <>
+                      <span>✓</span>
+                      <span>BitFortune sent!</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>💬</span>
+                      <span>Push BitFortune (5K)</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
