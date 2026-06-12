@@ -7,7 +7,8 @@ Add the Discord Webhook URL to your `.env.local` file.
 
 ```bash
 # .env.local
-DISCORD_WEBHOOK_URL=https://discordapp.com/api/webhooks/YOUR_WEBHOOK_URL_HERE
+DISCORD_WEBHOOK_URL=https://discordapp.com/api/webhooks/YOUR_BOMBASTIC_WEBHOOK_URL_HERE
+DISCORD_BITFORTUNE_WEBHOOK_URL=https://discordapp.com/api/webhooks/YOUR_BITFORTUNE_WEBHOOK_URL_HERE
 ```
 
 ## 2. Create the API Route

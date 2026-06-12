@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { buildLeaderboardSnapshot, formatSnapshotMessage } from "@/lib/leaderboard-snapshot"
+import { parseSnapshotVariant, type SnapshotVariantId } from "@/lib/leaderboard-variants"
+
+function discordWebhookForVariant(variant: SnapshotVariantId): string | undefined {
+  if (variant === "bitfortune") {
+    return process.env.DISCORD_BITFORTUNE_WEBHOOK_URL
+  }
+  return process.env.DISCORD_WEBHOOK_URL
+}
 
 export async function POST(request: Request) {
   try {
@@ -27,9 +35,11 @@ export async function POST(request: Request) {
     const snapshot = await buildLeaderboardSnapshot(searchParams.get("variant"), searchParams)
     const discordMessage = formatSnapshotMessage(snapshot, { maskUsernames: true })
 
-    const webhookUrl = process.env.DISCORD_WEBHOOK_URL
+    const webhookUrl = discordWebhookForVariant(parseSnapshotVariant(snapshot.variant))
     if (!webhookUrl) {
-      return NextResponse.json({ error: "Discord webhook URL not configured" }, { status: 500 })
+      const envKey =
+        snapshot.variant === "bitfortune" ? "DISCORD_BITFORTUNE_WEBHOOK_URL" : "DISCORD_WEBHOOK_URL"
+      return NextResponse.json({ error: `${envKey} not configured` }, { status: 500 })
     }
 
     const discordResponse = await fetch(webhookUrl, {
