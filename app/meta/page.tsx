@@ -44,7 +44,7 @@ export default function MetaPage() {
 
         <div className="flex justify-center px-4 pb-4 md:pb-6">
           <a
-            href="https://metaspins.com/"
+            href="https://metaspins.com/?ref=essex"
             target="_blank"
             rel="noopener noreferrer"
             className="group relative block"
@@ -85,7 +85,7 @@ export default function MetaPage() {
             </a>
 
             <a
-              href="https://metaspins.com/"
+              href="https://metaspins.com/?ref=essex"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:opacity-100 transition-opacity"

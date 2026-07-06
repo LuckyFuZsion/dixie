@@ -13,7 +13,7 @@ import {
 } from "@/lib/leaderboard-variants"
 
 /** Bump when OG assets change so social crawlers fetch fresh previews. */
-const OG_IMAGE_CACHE_VERSION = "6"
+const OG_IMAGE_CACHE_VERSION = "7"
 
 const OG_SITE_NAMES: Record<SnapshotVariantId, string> = {
   bombastic: "Streaming Shack and Diamond Dixie",
@@ -90,7 +90,8 @@ export function buildLeaderboardSocialMetadata(
     variantId === "meta" ? "Metaspins" : variantId === "bitfortune" ? "BitFortune" : "Bombastic"
   const poolLabel = variantId === "bombastic" ? "3K" : "5K"
 
-  const title = options?.titlePrefix ? `${options.titlePrefix} · ${variant.title}` : variant.title
+  const baseTitle = options?.titlePrefix ? `${options.titlePrefix} · ${variant.title}` : variant.title
+  const title = variantId === "meta" ? `${baseTitle} · ${start} – ${end}` : baseTitle
 
   const raceDetails = `${brand} ${poolLabel} Wager Race · ${start} – ${end} · $${variant.prizePoolTotal.toLocaleString()} prize pool (${prizes})`
   const description = options?.descriptionLead
@@ -99,6 +100,7 @@ export function buildLeaderboardSocialMetadata(
 
   const ogImage = OG_IMAGES[variantId]
   const imageUrl = ogImageUrl(ogImage.path)
+  const ogAlt = variantId === "meta" ? `${variant.title} · ${start} – ${end}` : ogImage.alt
 
   return {
     title,
@@ -108,7 +110,7 @@ export function buildLeaderboardSocialMetadata(
       description,
       type: "website",
       siteName: OG_SITE_NAMES[variantId],
-      images: [{ url: imageUrl, alt: ogImage.alt }],
+      images: [{ url: imageUrl, alt: ogAlt }],
     },
     twitter: {
       card: "summary_large_image",
