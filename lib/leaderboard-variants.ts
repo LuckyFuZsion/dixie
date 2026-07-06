@@ -97,7 +97,7 @@ export const META_STREAMER_VARIANT: LeaderboardVariantConfig = {
     "NEXT_PUBLIC_METASPINS_TO",
     "NEXT_PUBLIC_METASPINS_END_AT",
   ],
-  defaultStartDate: "2026-06-20",
+  defaultStartDate: "2026-07-01",
   defaultEndDate: "2026-07-31",
 }
 
