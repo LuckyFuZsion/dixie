@@ -1,0 +1,58 @@
+Metaspins API Documentation
+STREAMER · JSON · READ-ONLY
+Read-only leaderboard API. Pull ranked player wagering data for any UTC time range with a single GET request.
+Endpoint
+GET https://data.crossfade.gg/{slug}/{api_key}?from={unix_start}&to={unix_end}
+Parameter
+Description
+slug
+api_key
+from / 
+Public streamer slug (from your manager)
+Secret key starting with 
+to
+cf_
+Unix timestamp in seconds (UTC)
+No auth headers — the key in the URL is your credential.
+Example
+Request
+curl "https://data.crossfade.gg/your-slug/cf_YOUR_API_KEY?from=1782864000&to=1785542399"
+Response
+{
+}
+"streamer": "your-slug",
+"from": 1782864000,
+"to": 1785542399,
+"periodStart": "2026-07-01",
+"periodEnd": "2026-07-31",
+"fetchedAt": "2026-07-02T09:15:00.000Z",
+"players": [{ "userId": "00000", "username": "example_player", "totalWagered": 1000.00 }]
+players sorted by 
+totalWagered (highest first).
+Time ranges
+UTC Unix seconds only — not 
+2026-07-01 date strings.
+UTC moment
+Jul 1, 2026 00:00:00
+Jul 31, 2026 23:59:59
+Timestamp
+1782864000
+1785542399
+Errors
+Code
+PUBLIC_API_UNAUTHORIZED
+PUBLIC_API_PERIOD_REQUIRED
+Meaning
+Invalid slug or key
+Missing 
+from or 
+to
+PUBLIC_API_PERIOD_INVALID
+Use epochconverter.com (GMT/UTC) to convert dates.
+Notes
+Bad timestamps
+Read-only — cannot modify data
+Keep 
+cf_… private; rotate if exposed
+Poll every 60+ seconds
+data.crossfade.gg/ 404 is expected

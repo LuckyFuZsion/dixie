@@ -14,7 +14,7 @@ interface Particle {
 }
 
 type FuturisticBackgroundProps = {
-  variant?: "default" | "bitfortune"
+  variant?: "default" | "bitfortune" | "meta"
 }
 
 export default function FuturisticBackground({ variant = "default" }: FuturisticBackgroundProps) {
@@ -62,12 +62,15 @@ export default function FuturisticBackground({ variant = "default" }: Futuristic
     }
 
     const draw = (t: number) => {
-      // Clear with dark background (more transparent to show through)
-      ctx.fillStyle = "rgba(15, 23, 42, 0.05)"
+      ctx.fillStyle = variant === "meta" ? "rgba(0, 0, 0, 0.12)" : "rgba(15, 23, 42, 0.05)"
       ctx.fillRect(0, 0, width, height)
 
       const lineColor =
-        variant === "bitfortune" ? "rgba(247, 187, 38, 0.3)" : "rgba(251, 146, 60, 0.3)"
+        variant === "bitfortune"
+          ? "rgba(247, 187, 38, 0.3)"
+          : variant === "meta"
+            ? "rgba(120, 255, 0, 0.22)"
+            : "rgba(251, 146, 60, 0.3)"
 
       // Draw connecting lines between nearby particles - make more visible
       ctx.strokeStyle = lineColor
@@ -113,7 +116,9 @@ export default function FuturisticBackground({ variant = "default" }: Futuristic
         const particleShades =
           variant === "bitfortune"
             ? ["#F7BB26", "#FFD666", "#E5A820", "#C8941A", "#FFF8E7", "#D4A017"]
-            : ["#F97316", "#FB923C", "#F59E0B", "#EF4444", "#EA580C", "#DC2626"]
+            : variant === "meta"
+              ? ["#78FF00", "#B8FF4D", "#5DFF00", "#4DB800", "#D4FF8A", "#A3FF00"]
+              : ["#F97316", "#FB923C", "#F59E0B", "#EF4444", "#EA580C", "#DC2626"]
         const masculineColor = particleShades[Math.floor((particle.x + particle.y + t * 0.1) % particleShades.length)]
 
         // Outer glow - make brighter

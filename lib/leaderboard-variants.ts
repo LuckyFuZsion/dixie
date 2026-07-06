@@ -74,11 +74,38 @@ export const BITFORTUNE_STREAMER_VARIANT: LeaderboardVariantConfig = {
   defaultEndDate: "2026-07-10",
 }
 
+export const META_STREAMER_VARIANT: LeaderboardVariantConfig = {
+  cachePrefix: "meta-streamer",
+  apiPath: "/api/meta/leaderboard",
+  prizeMap: { 1: 2500, 2: 1500, 3: 500, 4: 300, 5: 200 },
+  isoDateFromKeys: [
+    "METASPINS_DATE_FROM",
+    "METASPINS_FROM_DATE",
+    "NEXT_PUBLIC_METASPINS_FROM_DATE",
+    "NEXT_PUBLIC_METASPINS_DATE_FROM",
+  ],
+  isoDateToKeys: [
+    "METASPINS_DATE_TO",
+    "METASPINS_TO_DATE",
+    "NEXT_PUBLIC_METASPINS_TO_DATE",
+    "NEXT_PUBLIC_METASPINS_DATE_TO",
+  ],
+  unixFromKeys: ["METASPINS_FROM", "NEXT_PUBLIC_METASPINS_FROM"],
+  unixToKeys: [
+    "METASPINS_END_AT",
+    "METASPINS_TO",
+    "NEXT_PUBLIC_METASPINS_TO",
+    "NEXT_PUBLIC_METASPINS_END_AT",
+  ],
+  defaultStartDate: "2026-06-20",
+  defaultEndDate: "2026-07-31",
+}
+
 export function prizeForRank(map: Record<number, number>, rank: number): number {
   return map[rank] ?? 0
 }
 
-export type SnapshotVariantId = "bombastic" | "bitfortune"
+export type SnapshotVariantId = "bombastic" | "bitfortune" | "meta"
 
 export type SnapshotVariantMeta = LeaderboardVariantConfig & {
   title: string
@@ -96,8 +123,15 @@ export const SNAPSHOT_VARIANTS: Record<SnapshotVariantId, SnapshotVariantMeta> =
     title: "Streaming Shack 5K Wager Race",
     prizePoolTotal: 5000,
   },
+  meta: {
+    ...META_STREAMER_VARIANT,
+    title: "Streaming Shack 5K Metaspins Wager Race",
+    prizePoolTotal: 5000,
+  },
 }
 
 export function parseSnapshotVariant(value: string | null | undefined): SnapshotVariantId {
-  return value === "bitfortune" ? "bitfortune" : "bombastic"
+  if (value === "bitfortune") return "bitfortune"
+  if (value === "meta") return "meta"
+  return "bombastic"
 }

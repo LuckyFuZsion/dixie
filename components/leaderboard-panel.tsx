@@ -62,7 +62,7 @@ function PodiumPlaceCard({
     <div className={`relative group w-full max-w-[18rem] mx-auto ${sizeClass}`}>
       <div className={`absolute inset-0 rounded-2xl ${podiumRingClass(p.rank, theme)} opacity-80`} />
       <div
-        className={`relative h-full bg-black border border-zinc-800/50 rounded-2xl flex flex-col items-center justify-center text-center px-6 ${theme.podiumCardShadow}`}
+        className={`relative h-full rounded-2xl flex flex-col items-center justify-center text-center px-6 ${theme.podiumCardBg} ${theme.podiumCardShadow}`}
       >
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center rounded-full bg-zinc-950/95 border border-white/15 px-2 py-1.5 shadow-lg ring-1 ring-white/10">
           <PodiumTrophy rank={p.rank} theme={theme} />
@@ -94,7 +94,7 @@ function PodiumTrophy({ rank, theme }: { rank: number; theme: LeaderboardTheme }
     rank === 1
       ? `${sizeClass} ${theme.trophyFirst}`
       : rank === 2
-        ? `${sizeClass} text-slate-200 drop-shadow-[0_0_12px_rgba(226,232,240,0.55)]`
+        ? `${sizeClass} ${theme.trophySecond}`
         : `${sizeClass} ${theme.trophyThird}`
   const label = rank === 1 ? "1st place" : rank === 2 ? "2nd place" : "3rd place"
   return (
@@ -138,7 +138,7 @@ export default function LeaderboardPanel({
                   alt={branding.logo.alt}
                   width={branding.logo.width}
                   height={branding.logo.height}
-                  className="opacity-90"
+                  className={theme.logoImageClass}
                 />
               </a>
             ) : branding.logoText ? (
@@ -158,8 +158,8 @@ export default function LeaderboardPanel({
             ) : null}
           </div>
           <h1
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 tracking-wide drop-shadow-lg max-w-4xl mx-auto leading-tight px-2"
-            style={{ fontFamily: "var(--font-future)", textShadow: "2px 2px 4px rgba(0,0,0,0.2)" }}
+            className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 tracking-wide drop-shadow-lg max-w-4xl mx-auto leading-tight px-2 ${theme.titleClass}`}
+            style={{ fontFamily: "var(--font-future)", textShadow: branding.theme === "meta" ? undefined : "2px 2px 4px rgba(0,0,0,0.2)" }}
           >
             {branding.title}
           </h1>
@@ -223,7 +223,7 @@ export default function LeaderboardPanel({
                     {t.value}
                   </div>
                   <div
-                    className="text-[10px] sm:text-xs uppercase tracking-widest text-white/70 drop-shadow-sm"
+                    className={`text-[10px] sm:text-xs uppercase tracking-widest drop-shadow-sm ${theme.countdownLabelClass}`}
                     style={{ textShadow: "1px 1px 2px rgba(0,0,0,0.1)" }}
                   >
                     {t.label}
@@ -280,7 +280,7 @@ export default function LeaderboardPanel({
               >
                 <div className={`absolute inset-0 rounded-2xl ${podiumRingClass(p.rank, theme)} opacity-80`} />
                 <div
-                  className={`relative h-full bg-black border border-zinc-800/50 rounded-2xl flex flex-col items-center justify-center text-center px-2 sm:px-4 lg:px-6 ${theme.podiumCardShadow}`}
+                  className={`relative h-full rounded-2xl flex flex-col items-center justify-center text-center px-2 sm:px-4 lg:px-6 ${theme.podiumCardBg} ${theme.podiumCardShadow}`}
                 >
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center rounded-full bg-zinc-950/95 border border-white/15 px-2 py-1.5 shadow-lg ring-1 ring-white/10">
                     <PodiumTrophy rank={p.rank} theme={theme} />
@@ -326,7 +326,7 @@ export default function LeaderboardPanel({
           {rest.map((p) => (
             <div key={p.id} className="relative group w-full max-w-[64rem] mx-2 md:mx-4">
               <div className={`absolute -inset-1 ${theme.rowGlowGradient} rounded-2xl blur-sm opacity-20 group-hover:opacity-40 transition`} />
-              <div className={`relative bg-black rounded-2xl px-4 md:px-6 py-4 md:py-5 border flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${theme.rowBorder} ${theme.rowShadow}`}>
+              <div className={`relative rounded-2xl px-4 md:px-6 py-4 md:py-5 border flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${theme.rowBg} ${theme.rowBorder} ${theme.rowShadow}`}>
                 <div className="flex items-center gap-2 md:gap-4">
                   <div className={`text-base font-extrabold w-10 text-center ${theme.dateAccent}`} style={{ fontFamily: "var(--font-future)" }}>
                     #{p.rank}

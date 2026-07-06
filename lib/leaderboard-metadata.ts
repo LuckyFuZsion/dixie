@@ -6,17 +6,19 @@ import {
 } from "@/lib/leaderboard-dates"
 import {
   BITFORTUNE_STREAMER_VARIANT,
+  META_STREAMER_VARIANT,
   prizeForRank,
   SNAPSHOT_VARIANTS,
   type SnapshotVariantId,
 } from "@/lib/leaderboard-variants"
 
 /** Bump when OG assets change so social crawlers fetch fresh previews. */
-const OG_IMAGE_CACHE_VERSION = "4"
+const OG_IMAGE_CACHE_VERSION = "5"
 
 const OG_SITE_NAMES: Record<SnapshotVariantId, string> = {
   bombastic: "Streaming Shack and Diamond Dixie",
   bitfortune: "Streaming Shack",
+  meta: "Streaming Shack",
 }
 
 const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
@@ -27,6 +29,10 @@ const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
   bitfortune: {
     path: "/images/og-bitfortune.png",
     alt: "Streaming Shack 5K Wager Race — BitFortune promotional banner",
+  },
+  meta: {
+    path: "/metaspins-opengraph.png",
+    alt: "Streaming Shack 5K Metaspins Wager Race — Metaspins promotional banner",
   },
 }
 
@@ -39,6 +45,9 @@ export function resolveRangeForVariant(variantId: SnapshotVariantId): Leaderboar
   if (variantId === "bombastic") {
     return resolveLeaderboardRange()
   }
+  if (variantId === "meta") {
+    return resolveVariantRange(META_STREAMER_VARIANT)
+  }
   return resolveVariantRange(BITFORTUNE_STREAMER_VARIANT)
 }
 
@@ -48,11 +57,18 @@ function formatDisplayDate(iso: string): string {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
 }
 
+function ordinalLabel(rank: number): string {
+  if (rank === 1) return "1st"
+  if (rank === 2) return "2nd"
+  if (rank === 3) return "3rd"
+  return `${rank}th`
+}
+
 function formatPrizeBreakdown(prizeMap: Record<number, number>): string {
-  const ranks = [1, 2, 3, 4] as const
-  const labels = ["1st", "2nd", "3rd", "4th"] as const
-  return ranks
-    .map((rank, i) => `${labels[i]} $${prizeForRank(prizeMap, rank).toLocaleString()}`)
+  return Object.keys(prizeMap)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((rank) => `${ordinalLabel(rank)} $${prizeForRank(prizeMap, rank).toLocaleString()}`)
     .join(", ")
 }
 
@@ -70,8 +86,9 @@ export function buildLeaderboardSocialMetadata(
   const start = formatDisplayDate(range.startAt)
   const end = formatDisplayDate(range.endAt)
   const prizes = formatPrizeBreakdown(variant.prizeMap)
-  const brand = variantId === "bitfortune" ? "Streaming Shack" : "Bombastic"
-  const poolLabel = variantId === "bitfortune" ? "5K" : "3K"
+  const brand =
+    variantId === "meta" ? "Metaspins" : variantId === "bitfortune" ? "BitFortune" : "Bombastic"
+  const poolLabel = variantId === "bombastic" ? "3K" : "5K"
 
   const title = options?.titlePrefix ? `${options.titlePrefix} · ${variant.title}` : variant.title
 
