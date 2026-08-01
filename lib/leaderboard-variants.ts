@@ -77,7 +77,7 @@ export const BITFORTUNE_STREAMER_VARIANT: LeaderboardVariantConfig = {
 export const META_STREAMER_VARIANT: LeaderboardVariantConfig = {
   cachePrefix: "meta-streamer",
   apiPath: "/api/meta/leaderboard",
-  prizeMap: { 1: 2500, 2: 1500, 3: 500, 4: 300, 5: 200 },
+  prizeMap: { 1: 1500, 2: 600, 3: 250, 4: 150 },
   isoDateFromKeys: [
     "METASPINS_DATE_FROM",
     "METASPINS_FROM_DATE",
@@ -125,8 +125,8 @@ export const SNAPSHOT_VARIANTS: Record<SnapshotVariantId, SnapshotVariantMeta> =
   },
   meta: {
     ...META_STREAMER_VARIANT,
-    title: "Streaming Shack 5K Metaspins Wager Race",
-    prizePoolTotal: 5000,
+    title: "Streaming Shack 2.5K Metaspins Wager Race",
+    prizePoolTotal: 2500,
   },
 }
 

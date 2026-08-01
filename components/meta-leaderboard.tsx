@@ -10,7 +10,7 @@ export default function MetaLeaderboard() {
     <LeaderboardPanel
       branding={{
         theme: "meta",
-        title: "Streaming Shack 5K Wager Race",
+        title: "Streaming Shack 2.5K Wager Race",
         subtitle: "Metaspins streamer leaderboard",
         note: "Note: No originals can be used at 1.01x for wagering",
       }}

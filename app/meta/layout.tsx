@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "Metaspins",
       "Streaming Shack",
       "leaderboard",
-      "5K Wager Race",
+      "2.5K Wager Race",
       "wager race",
       "streamer",
       "Crossfade",

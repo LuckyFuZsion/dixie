@@ -13,7 +13,7 @@ import {
 } from "@/lib/leaderboard-variants"
 
 /** Bump when OG assets change so social crawlers fetch fresh previews. */
-const OG_IMAGE_CACHE_VERSION = "8"
+const OG_IMAGE_CACHE_VERSION = "9"
 
 const OG_SITE_NAMES: Record<SnapshotVariantId, string> = {
   bombastic: "Streaming Shack and Diamond Dixie",
@@ -31,8 +31,8 @@ const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
     alt: "Streaming Shack 5K Wager Race — BitFortune promotional banner",
   },
   meta: {
-    path: "/sshack-og.jpg",
-    alt: "Streaming Shack 5K Metaspins Wager Race — promotional banner",
+    path: "/Gemini_Generated_Image_j0dx3uj0dx3uj0dx.png",
+    alt: "Streaming Shack 2.5K Metaspins Wager Race — promotional banner",
   },
 }
 
@@ -88,7 +88,8 @@ export function buildLeaderboardSocialMetadata(
   const prizes = formatPrizeBreakdown(variant.prizeMap)
   const brand =
     variantId === "meta" ? "Metaspins" : variantId === "bitfortune" ? "BitFortune" : "Bombastic"
-  const poolLabel = variantId === "bombastic" ? "3K" : "5K"
+  const poolLabel =
+    variantId === "bombastic" ? "3K" : variantId === "meta" ? "2.5K" : "5K"
 
   const baseTitle = options?.titlePrefix ? `${options.titlePrefix} · ${variant.title}` : variant.title
   const title = variantId === "meta" ? `${baseTitle} · ${start} – ${end}` : baseTitle
