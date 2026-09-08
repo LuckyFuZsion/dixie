@@ -14,7 +14,7 @@ import {
 } from "@/lib/leaderboard-variants"
 
 /** Bump when OG assets change so social crawlers fetch fresh previews. */
-const OG_IMAGE_CACHE_VERSION = "7"
+const OG_IMAGE_CACHE_VERSION = "10"
 
 const OG_SITE_NAMES: Record<SnapshotVariantId, string> = {
   bombastic: "Streaming Shack and Diamond Dixie",
@@ -32,7 +32,7 @@ const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
     alt: "Streaming Shack 5K Wager Race — BitFortune promotional banner",
   },
   meta: {
-    path: "/betaopengraph.png",
+    path: "/metaspins-og.png",
     alt: "Streaming Shack Metaspins Wager Race — promotional banner",
   },
 }

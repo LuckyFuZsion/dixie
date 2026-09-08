@@ -74,21 +74,22 @@ export const BITFORTUNE_STREAMER_VARIANT: LeaderboardVariantConfig = {
   defaultEndDate: "2026-07-10",
 }
 
-/** Default Metaspins prizes (1st→5th). Override with NEXT_PUBLIC_METASPINS_PRIZES / METASPINS_PRIZES. */
+/** Default Metaspins prizes (1st→6th). Override with NEXT_PUBLIC_METASPINS_PRIZES / METASPINS_PRIZES. */
 export const DEFAULT_META_PRIZE_MAP: Record<number, number> = {
   1: 2500,
-  2: 1500,
-  3: 500,
-  4: 300,
-  5: 200,
+  2: 1200,
+  3: 600,
+  4: 350,
+  5: 250,
+  6: 100,
 }
 
 /**
  * Parse a prize list string into a rank→amount map.
  * Accepted formats:
- * - "2500,1500,500,300,200" (rank order, 1st first)
- * - "2500 1500 500 300 200"
- * - "1:2500,2:1500,3:500"
+ * - "2500,1200,600,350,250,100" (rank order, 1st first)
+ * - "2500 1200 600 350 250 100"
+ * - "1:2500,2:1200,3:600"
  */
 export function parsePrizeList(raw: string | undefined | null): Record<number, number> | null {
   if (!raw?.trim()) return null
