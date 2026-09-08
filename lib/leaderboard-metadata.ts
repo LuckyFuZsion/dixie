@@ -6,9 +6,10 @@ import {
 } from "@/lib/leaderboard-dates"
 import {
   BITFORTUNE_STREAMER_VARIANT,
-  META_STREAMER_VARIANT,
+  formatPoolLabel,
+  getMetaStreamerVariant,
+  getSnapshotVariant,
   prizeForRank,
-  SNAPSHOT_VARIANTS,
   type SnapshotVariantId,
 } from "@/lib/leaderboard-variants"
 
@@ -32,7 +33,7 @@ const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
   },
   meta: {
     path: "/betaopengraph.png",
-    alt: "Streaming Shack 5K Metaspins Wager Race — promotional banner",
+    alt: "Streaming Shack Metaspins Wager Race — promotional banner",
   },
 }
 
@@ -46,7 +47,7 @@ export function resolveRangeForVariant(variantId: SnapshotVariantId): Leaderboar
     return resolveLeaderboardRange()
   }
   if (variantId === "meta") {
-    return resolveVariantRange(META_STREAMER_VARIANT)
+    return resolveVariantRange(getMetaStreamerVariant())
   }
   return resolveVariantRange(BITFORTUNE_STREAMER_VARIANT)
 }
@@ -81,14 +82,14 @@ export function buildLeaderboardSocialMetadata(
   variantId: SnapshotVariantId,
   options?: SocialMetadataOptions
 ): Pick<Metadata, "title" | "description" | "openGraph" | "twitter"> {
-  const variant = SNAPSHOT_VARIANTS[variantId]
+  const variant = getSnapshotVariant(variantId)
   const range = resolveRangeForVariant(variantId)
   const start = formatDisplayDate(range.startAt)
   const end = formatDisplayDate(range.endAt)
   const prizes = formatPrizeBreakdown(variant.prizeMap)
   const brand =
     variantId === "meta" ? "Metaspins" : variantId === "bitfortune" ? "BitFortune" : "Bombastic"
-  const poolLabel = variantId === "bombastic" ? "3K" : "5K"
+  const poolLabel = formatPoolLabel(variant.prizePoolTotal)
 
   const baseTitle = options?.titlePrefix ? `${options.titlePrefix} · ${variant.title}` : variant.title
   const title = variantId === "meta" ? `${baseTitle} · ${start} – ${end}` : baseTitle

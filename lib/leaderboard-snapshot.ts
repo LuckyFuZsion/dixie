@@ -1,8 +1,8 @@
 import { resolveVariantRange } from "@/lib/leaderboard-dates"
 import {
+  getSnapshotVariant,
   parseSnapshotVariant,
   prizeForRank,
-  SNAPSHOT_VARIANTS,
   type SnapshotVariantId,
 } from "@/lib/leaderboard-variants"
 
@@ -75,6 +75,16 @@ function rankPlayers(
   }))
 }
 
+function prizesFromMap(prizeMap: Record<number, number>): Record<number, number> {
+  const prizes: Record<number, number> = {}
+  for (const rank of Object.keys(prizeMap)
+    .map(Number)
+    .sort((a, b) => a - b)) {
+    prizes[rank] = prizeForRank(prizeMap, rank)
+  }
+  return prizes
+}
+
 async function fetchBombasticEntries(): Promise<Array<{ id: string; username: string; wagered: number }>> {
   const exportUrl = process.env.LEADERBOARD_EXPORT_URL || DEFAULT_LEADERBOARD_EXPORT_URL
   const response = await fetch(exportUrl, {
@@ -136,7 +146,7 @@ export async function buildLeaderboardSnapshot(
   searchParams?: URLSearchParams
 ): Promise<LeaderboardSnapshot> {
   const variant = parseSnapshotVariant(variantInput)
-  const config = SNAPSHOT_VARIANTS[variant]
+  const config = getSnapshotVariant(variant)
   const range = resolveVariantRange(config, searchParams)
 
   const entries =
@@ -145,12 +155,7 @@ export async function buildLeaderboardSnapshot(
       : await fetchBombasticEntries()
 
   const leaderboard = rankPlayers(entries, config.prizeMap)
-  const prizes = {
-    1: prizeForRank(config.prizeMap, 1),
-    2: prizeForRank(config.prizeMap, 2),
-    3: prizeForRank(config.prizeMap, 3),
-    4: prizeForRank(config.prizeMap, 4),
-  }
+  const prizes = prizesFromMap(config.prizeMap)
 
   return {
     variant,
@@ -173,6 +178,13 @@ export function maskUsernameForDiscord(username: string): string {
   return `${firstTwo}${asterisks}${lastTwo}`
 }
 
+function ordinalPrizeLine(rank: number, amount: number): string {
+  if (rank === 1) return `🥇 1st: $${amount}`
+  if (rank === 2) return `🥈 2nd: $${amount}`
+  if (rank === 3) return `🥉 3rd: $${amount}`
+  return `${rank}th: $${amount}`
+}
+
 export function formatSnapshotMessage(
   snapshot: LeaderboardSnapshot,
   options?: { maskUsernames?: boolean }
@@ -183,11 +195,12 @@ export function formatSnapshotMessage(
   let message = `🏆 **${title}** 🏆\n\n`
   message += `📅 **Period:** ${dateRange.start} ${dateRange.startTime} → ${dateRange.end} ${dateRange.endTime}\n\n`
   message += `💰 **Prize Pool ($${prizePoolTotal.toLocaleString()}):**\n`
-  message += `🥇 1st: $${prizes[1]}\n`
-  message += `🥈 2nd: $${prizes[2]}\n`
-  message += `🥉 3rd: $${prizes[3]}\n`
-  message += `4th: $${prizes[4]}\n\n`
-  message += `**Current Standings:**\n\n`
+  for (const rank of Object.keys(prizes)
+    .map(Number)
+    .sort((a, b) => a - b)) {
+    message += `${ordinalPrizeLine(rank, prizes[rank])}\n`
+  }
+  message += `\n**Current Standings:**\n\n`
 
   leaderboard.slice(0, 20).forEach((player) => {
     const medal = player.rank === 1 ? "🥇" : player.rank === 2 ? "🥈" : player.rank === 3 ? "🥉" : ""

@@ -1,6 +1,6 @@
 "use client"
 
-import { META_STREAMER_VARIANT } from "@/lib/leaderboard-variants"
+import { getMetaStreamerVariant } from "@/lib/leaderboard-variants"
 import { createLeaderboardHook } from "@/hooks/create-leaderboard-hook"
 
-export const useMetaLeaderboard = createLeaderboardHook(META_STREAMER_VARIANT)
+export const useMetaLeaderboard = createLeaderboardHook(getMetaStreamerVariant())

@@ -82,10 +82,16 @@ export default function AdminPage() {
     let output = `🏆 **${title}** 🏆\n\n`
     output += `📅 **Period:** ${dateRange.start} ${dateRange.startTime} → ${dateRange.end} ${dateRange.endTime}\n\n`
     output += `💰 **Prize Pool ($${Number(prizePoolTotal).toLocaleString()}):**\n`
-    output += `🥇 1st: $${prizes[1]}\n`
-    output += `🥈 2nd: $${prizes[2]}\n`
-    output += `🥉 3rd: $${prizes[3]}\n`
-    output += `4th: $${prizes[4]}\n\n`
+    for (const rank of Object.keys(prizes || {})
+      .map(Number)
+      .sort((a, b) => a - b)) {
+      const amount = prizes[rank]
+      if (rank === 1) output += `🥇 1st: $${amount}\n`
+      else if (rank === 2) output += `🥈 2nd: $${amount}\n`
+      else if (rank === 3) output += `🥉 3rd: $${amount}\n`
+      else output += `${rank}th: $${amount}\n`
+    }
+    output += `\n`
     output += `**Current Leaderboard:**\n\n`
     
     // Show top 20 or available players

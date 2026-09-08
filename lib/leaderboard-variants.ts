@@ -74,10 +74,75 @@ export const BITFORTUNE_STREAMER_VARIANT: LeaderboardVariantConfig = {
   defaultEndDate: "2026-07-10",
 }
 
-export const META_STREAMER_VARIANT: LeaderboardVariantConfig = {
+/** Default Metaspins prizes (1st→5th). Override with NEXT_PUBLIC_METASPINS_PRIZES / METASPINS_PRIZES. */
+export const DEFAULT_META_PRIZE_MAP: Record<number, number> = {
+  1: 2500,
+  2: 1500,
+  3: 500,
+  4: 300,
+  5: 200,
+}
+
+/**
+ * Parse a prize list string into a rank→amount map.
+ * Accepted formats:
+ * - "2500,1500,500,300,200" (rank order, 1st first)
+ * - "2500 1500 500 300 200"
+ * - "1:2500,2:1500,3:500"
+ */
+export function parsePrizeList(raw: string | undefined | null): Record<number, number> | null {
+  if (!raw?.trim()) return null
+
+  const trimmed = raw.trim()
+  const map: Record<number, number> = {}
+
+  if (trimmed.includes(":")) {
+    for (const part of trimmed.split(/[,;\s]+/)) {
+      if (!part) continue
+      const [rankRaw, amountRaw] = part.split(":")
+      const rank = Number(rankRaw)
+      const amount = Number(String(amountRaw ?? "").replace(/[$,]/g, ""))
+      if (!Number.isFinite(rank) || rank < 1 || !Number.isFinite(amount) || amount < 0) continue
+      map[rank] = amount
+    }
+  } else {
+    const amounts = trimmed
+      .split(/[,;\s]+/)
+      .map((s) => Number(s.replace(/[$,]/g, "")))
+      .filter((n) => Number.isFinite(n) && n >= 0)
+    amounts.forEach((amount, index) => {
+      map[index + 1] = amount
+    })
+  }
+
+  return Object.keys(map).length > 0 ? map : null
+}
+
+export function resolveMetaPrizeMap(): Record<number, number> {
+  const fromEnv = parsePrizeList(
+    process.env.NEXT_PUBLIC_METASPINS_PRIZES || process.env.METASPINS_PRIZES
+  )
+  return fromEnv ?? { ...DEFAULT_META_PRIZE_MAP }
+}
+
+export function sumPrizePool(map: Record<number, number>): number {
+  return Object.values(map).reduce((sum, amount) => sum + amount, 0)
+}
+
+/** e.g. 5000 → "5K", 2500 → "2.5K", 750 → "$750" */
+export function formatPoolLabel(total: number): string {
+  if (!Number.isFinite(total) || total <= 0) return "0"
+  if (total >= 1000) {
+    const k = total / 1000
+    const label = Number.isInteger(k) ? String(k) : String(parseFloat(k.toFixed(1)))
+    return `${label}K`
+  }
+  return `$${total.toLocaleString()}`
+}
+
+const META_STREAMER_BASE: Omit<LeaderboardVariantConfig, "prizeMap"> = {
   cachePrefix: "meta-streamer",
   apiPath: "/api/meta/leaderboard",
-  prizeMap: { 1: 2500, 2: 1500, 3: 500, 4: 300, 5: 200 },
   isoDateFromKeys: [
     "METASPINS_DATE_FROM",
     "METASPINS_FROM_DATE",
@@ -99,6 +164,19 @@ export const META_STREAMER_VARIANT: LeaderboardVariantConfig = {
   ],
   defaultStartDate: "2026-07-01",
   defaultEndDate: "2026-07-31",
+}
+
+/** Static fallback (defaults). Prefer getMetaStreamerVariant() so env prizes apply. */
+export const META_STREAMER_VARIANT: LeaderboardVariantConfig = {
+  ...META_STREAMER_BASE,
+  prizeMap: { ...DEFAULT_META_PRIZE_MAP },
+}
+
+export function getMetaStreamerVariant(): LeaderboardVariantConfig {
+  return {
+    ...META_STREAMER_BASE,
+    prizeMap: resolveMetaPrizeMap(),
+  }
 }
 
 export function prizeForRank(map: Record<number, number>, rank: number): number {
@@ -128,6 +206,22 @@ export const SNAPSHOT_VARIANTS: Record<SnapshotVariantId, SnapshotVariantMeta> =
     title: "Streaming Shack 5K Metaspins Wager Race",
     prizePoolTotal: 5000,
   },
+}
+
+/** Resolve variant config at runtime (Metaspins prizes/title come from env). */
+export function getSnapshotVariant(id: SnapshotVariantId): SnapshotVariantMeta {
+  if (id === "meta") {
+    const prizeMap = resolveMetaPrizeMap()
+    const prizePoolTotal = sumPrizePool(prizeMap)
+    const poolLabel = formatPoolLabel(prizePoolTotal)
+    return {
+      ...META_STREAMER_BASE,
+      prizeMap,
+      prizePoolTotal,
+      title: `Streaming Shack ${poolLabel} Metaspins Wager Race`,
+    }
+  }
+  return SNAPSHOT_VARIANTS[id]
 }
 
 export function parseSnapshotVariant(value: string | null | undefined): SnapshotVariantId {
