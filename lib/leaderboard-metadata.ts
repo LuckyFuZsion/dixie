@@ -7,6 +7,7 @@ import {
 import {
   BITFORTUNE_STREAMER_VARIANT,
   formatPoolLabel,
+  getDalerVariant,
   getMetaStreamerVariant,
   getSnapshotVariant,
   prizeForRank,
@@ -14,12 +15,13 @@ import {
 } from "@/lib/leaderboard-variants"
 
 /** Bump when OG assets change so social crawlers fetch fresh previews. */
-const OG_IMAGE_CACHE_VERSION = "10"
+const OG_IMAGE_CACHE_VERSION = "14"
 
 const OG_SITE_NAMES: Record<SnapshotVariantId, string> = {
   bombastic: "Streaming Shack and Diamond Dixie",
   bitfortune: "Streaming Shack",
   meta: "Streaming Shack",
+  daler: "Streaming Shack",
 }
 
 const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
@@ -35,6 +37,10 @@ const OG_IMAGES: Record<SnapshotVariantId, { path: string; alt: string }> = {
     path: "/metaspins-og.png",
     alt: "Streaming Shack Metaspins Wager Race — promotional banner",
   },
+  daler: {
+    path: "/daler-og.png",
+    alt: "Streaming Shack 2K Daler Wager Race — promotional banner",
+  },
 }
 
 function ogImageUrl(path: string): string {
@@ -48,6 +54,9 @@ export function resolveRangeForVariant(variantId: SnapshotVariantId): Leaderboar
   }
   if (variantId === "meta") {
     return resolveVariantRange(getMetaStreamerVariant())
+  }
+  if (variantId === "daler") {
+    return resolveVariantRange(getDalerVariant())
   }
   return resolveVariantRange(BITFORTUNE_STREAMER_VARIANT)
 }
@@ -88,11 +97,18 @@ export function buildLeaderboardSocialMetadata(
   const end = formatDisplayDate(range.endAt)
   const prizes = formatPrizeBreakdown(variant.prizeMap)
   const brand =
-    variantId === "meta" ? "Metaspins" : variantId === "bitfortune" ? "BitFortune" : "Bombastic"
+    variantId === "meta"
+      ? "Metaspins"
+      : variantId === "daler"
+        ? "Daler"
+        : variantId === "bitfortune"
+          ? "BitFortune"
+          : "Bombastic"
   const poolLabel = formatPoolLabel(variant.prizePoolTotal)
 
   const baseTitle = options?.titlePrefix ? `${options.titlePrefix} · ${variant.title}` : variant.title
-  const title = variantId === "meta" ? `${baseTitle} · ${start} – ${end}` : baseTitle
+  const title =
+    variantId === "meta" || variantId === "daler" ? `${baseTitle} · ${start} – ${end}` : baseTitle
 
   const raceDetails = `${brand} ${poolLabel} Wager Race · ${start} – ${end} · $${variant.prizePoolTotal.toLocaleString()} prize pool (${prizes})`
   const description = options?.descriptionLead
@@ -101,7 +117,8 @@ export function buildLeaderboardSocialMetadata(
 
   const ogImage = OG_IMAGES[variantId]
   const imageUrl = ogImageUrl(ogImage.path)
-  const ogAlt = variantId === "meta" ? `${variant.title} · ${start} – ${end}` : ogImage.alt
+  const ogAlt =
+    variantId === "meta" || variantId === "daler" ? `${variant.title} · ${start} – ${end}` : ogImage.alt
 
   return {
     title,

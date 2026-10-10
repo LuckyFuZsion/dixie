@@ -159,7 +159,13 @@ export default function LeaderboardPanel({
           </div>
           <h1
             className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 tracking-wide drop-shadow-lg max-w-4xl mx-auto leading-tight px-2 ${theme.titleClass}`}
-            style={{ fontFamily: "var(--font-future)", textShadow: branding.theme === "meta" ? undefined : "2px 2px 4px rgba(0,0,0,0.2)" }}
+            style={{
+              fontFamily: "var(--font-future)",
+              textShadow:
+                branding.theme === "meta" || branding.theme === "daler"
+                  ? undefined
+                  : "2px 2px 4px rgba(0,0,0,0.2)",
+            }}
           >
             {branding.title}
           </h1>

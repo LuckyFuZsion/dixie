@@ -180,11 +180,48 @@ export function getMetaStreamerVariant(): LeaderboardVariantConfig {
   }
 }
 
+/** Default Daler prizes (1st→4th). Override with NEXT_PUBLIC_DALER_PRIZES. */
+export const DEFAULT_DALER_PRIZE_MAP: Record<number, number> = {
+  1: 1200,
+  2: 500,
+  3: 200,
+  4: 100,
+}
+
+export function resolveDalerPrizeMap(): Record<number, number> {
+  const fromEnv = parsePrizeList(process.env.NEXT_PUBLIC_DALER_PRIZES)
+  return fromEnv ?? { ...DEFAULT_DALER_PRIZE_MAP }
+}
+
+const DALER_BASE: Omit<LeaderboardVariantConfig, "prizeMap"> = {
+  cachePrefix: "daler",
+  apiPath: "/api/daler/leaderboard",
+  isoDateFromKeys: ["DALER_DATE_FROM"],
+  isoDateToKeys: ["DALER_DATE_TO"],
+  unixFromKeys: ["DALER_FROM"],
+  unixToKeys: ["DALER_TO"],
+  defaultStartDate: "2026-10-09",
+  defaultEndDate: "2026-10-31",
+  datesFromApi: true,
+}
+
+export const DALER_VARIANT: LeaderboardVariantConfig = {
+  ...DALER_BASE,
+  prizeMap: { ...DEFAULT_DALER_PRIZE_MAP },
+}
+
+export function getDalerVariant(): LeaderboardVariantConfig {
+  return {
+    ...DALER_BASE,
+    prizeMap: resolveDalerPrizeMap(),
+  }
+}
+
 export function prizeForRank(map: Record<number, number>, rank: number): number {
   return map[rank] ?? 0
 }
 
-export type SnapshotVariantId = "bombastic" | "bitfortune" | "meta"
+export type SnapshotVariantId = "bombastic" | "bitfortune" | "meta" | "daler"
 
 export type SnapshotVariantMeta = LeaderboardVariantConfig & {
   title: string
@@ -207,9 +244,14 @@ export const SNAPSHOT_VARIANTS: Record<SnapshotVariantId, SnapshotVariantMeta> =
     title: "Streaming Shack 5K Metaspins Wager Race",
     prizePoolTotal: 5000,
   },
+  daler: {
+    ...DALER_VARIANT,
+    title: "Streaming Shack 2K Daler Wager Race",
+    prizePoolTotal: 2000,
+  },
 }
 
-/** Resolve variant config at runtime (Metaspins prizes/title come from env). */
+/** Resolve variant config at runtime (Metaspins/Daler prizes/title come from env). */
 export function getSnapshotVariant(id: SnapshotVariantId): SnapshotVariantMeta {
   if (id === "meta") {
     const prizeMap = resolveMetaPrizeMap()
@@ -222,11 +264,23 @@ export function getSnapshotVariant(id: SnapshotVariantId): SnapshotVariantMeta {
       title: `Streaming Shack ${poolLabel} Metaspins Wager Race`,
     }
   }
+  if (id === "daler") {
+    const prizeMap = resolveDalerPrizeMap()
+    const prizePoolTotal = sumPrizePool(prizeMap)
+    const poolLabel = formatPoolLabel(prizePoolTotal)
+    return {
+      ...DALER_BASE,
+      prizeMap,
+      prizePoolTotal,
+      title: `Streaming Shack ${poolLabel} Daler Wager Race`,
+    }
+  }
   return SNAPSHOT_VARIANTS[id]
 }
 
 export function parseSnapshotVariant(value: string | null | undefined): SnapshotVariantId {
   if (value === "bitfortune") return "bitfortune"
   if (value === "meta") return "meta"
+  if (value === "daler") return "daler"
   return "bombastic"
 }

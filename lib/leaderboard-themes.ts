@@ -1,8 +1,10 @@
 export const BITFORTUNE_GOLD = "#F7BB26"
 export const METASPINS_NEON = "#78FF00"
 export const METASPINS_NEON_DIM = "#4DB800"
+export const DALER_LIME = "#A855F7"
+export const DALER_LIME_DIM = "#7C3AED"
 
-export type LeaderboardThemeId = "default" | "bitfortune" | "meta"
+export type LeaderboardThemeId = "default" | "bitfortune" | "meta" | "daler"
 
 export type LeaderboardTheme = {
   subtitleClass: string
@@ -102,6 +104,32 @@ export const LEADERBOARD_THEMES: Record<LeaderboardThemeId, LeaderboardTheme> = 
     dateAccent: "text-[#78FF00]",
     prizeAmount: "text-[#B8FF66]",
     countdownLabelClass: "text-[#78FF00]/70",
+  },
+  daler: {
+    subtitleClass: "text-[#A855F7]/90 tracking-[0.18em] uppercase text-xs md:text-sm",
+    noteClass: "text-[#A855F7]/55",
+    titleClass: "text-white [text-shadow:0_0_22px_rgba(168,85,247,0.3)]",
+    logoImageClass: "opacity-100 drop-shadow-[0_0_24px_rgba(168,85,247,0.45)]",
+    podiumCardBg:
+      "bg-[#07060f] border border-[#A855F7]/30 shadow-[inset_0_0_40px_rgba(168,85,247,0.03)]",
+    podiumCardShadow: "shadow-[0_0_28px_rgba(168,85,247,0.14)]",
+    podiumWagerBadge:
+      "bg-[#A855F7]/10 text-[#E9D5FF] border-[#A855F7]/45 shadow-[0_0_14px_rgba(168,85,247,0.3)]",
+    podiumRingFirst: "ring-2 ring-[#A855F7] shadow-[0_0_18px_rgba(168,85,247,0.45)]",
+    podiumRingSecond: "ring-2 ring-[#A855F7]/40",
+    podiumRingThird: "ring-2 ring-[#7C3AED]",
+    trophyFirst: "text-[#A855F7] drop-shadow-[0_0_16px_rgba(168,85,247,0.9)]",
+    trophySecond: "text-[#F0ABFC] drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]",
+    trophyThird: "text-[#7C3AED] drop-shadow-[0_0_12px_rgba(124,58,237,0.6)]",
+    rowGlowGradient: "bg-gradient-to-r from-[#2e1065] via-[#A855F7] to-[#7C3AED]",
+    rowShadow: "shadow-[0_0_22px_rgba(168,85,247,0.1)]",
+    rowBorder: "border-[#A855F7]/22",
+    rowBg: "bg-[#07060f]",
+    refreshButton:
+      "border-[#A855F7]/45 text-[#A855F7] hover:bg-[#A855F7]/10 shadow-[0_0_12px_rgba(168,85,247,0.12)]",
+    dateAccent: "text-[#A855F7]",
+    prizeAmount: "text-[#F0ABFC]",
+    countdownLabelClass: "text-[#A855F7]/70",
   },
 }
 

@@ -1,3 +1,5 @@
+import { readFile } from "fs/promises"
+import path from "path"
 import { resolveVariantRange } from "@/lib/leaderboard-dates"
 import {
   getSnapshotVariant,
@@ -106,6 +108,51 @@ async function fetchBombasticEntries(): Promise<Array<{ id: string; username: st
   }))
 }
 
+function extractDalerRows(data: unknown): Array<Record<string, unknown>> {
+  if (Array.isArray(data)) return data as Array<Record<string, unknown>>
+  const payload = data as { items?: Array<{ rows?: unknown[] }>; rows?: unknown[]; leaderboard?: unknown[] }
+  if (Array.isArray(payload.rows)) return payload.rows as Array<Record<string, unknown>>
+  if (Array.isArray(payload.items)) {
+    const withRows = payload.items.find((item) => Array.isArray(item.rows) && item.rows!.length > 0)
+    if (withRows?.rows) return withRows.rows as Array<Record<string, unknown>>
+    const first = payload.items[0]
+    if (Array.isArray(first?.rows)) return first.rows as Array<Record<string, unknown>>
+  }
+  if (Array.isArray(payload.leaderboard)) return payload.leaderboard as Array<Record<string, unknown>>
+  return []
+}
+
+const DEFAULT_DALER_EXPORT_URL =
+  "https://api.daler.com/revibe/tournaments/public/streaming-shack/active?page=0&size=10"
+
+async function fetchDalerEntries(): Promise<Array<{ id: string; username: string; wagered: number }>> {
+  const exportUrl = process.env.DALER_EXPORT_URL || DEFAULT_DALER_EXPORT_URL
+  let data: unknown
+  try {
+    const response = await fetch(exportUrl, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Daler leaderboard: ${response.status}`)
+    }
+    data = await response.json()
+  } catch {
+    const raw = await readFile(path.join(process.cwd(), "active.json"), "utf8")
+    data = JSON.parse(raw)
+  }
+
+  return extractDalerRows(data).map((entry, index) => ({
+    id: String(entry.playerId ?? entry.userId ?? entry.id ?? entry.player ?? index + 1),
+    username: String(
+      entry.player ?? entry.username ?? entry.userName ?? entry.displayName ?? entry.name ?? `Player${index + 1}`
+    ),
+    wagered: Number(
+      entry.points ?? entry.bets ?? entry.wagered ?? entry.totalWagered ?? entry.score ?? entry.amount ?? 0
+    ),
+  }))
+}
+
 async function fetchBitfortuneEntries(
   fromUnix: number,
   toUnix: number
@@ -152,7 +199,9 @@ export async function buildLeaderboardSnapshot(
   const entries =
     variant === "bitfortune"
       ? await fetchBitfortuneEntries(range.fromUnix, range.toUnix)
-      : await fetchBombasticEntries()
+      : variant === "daler"
+        ? await fetchDalerEntries()
+        : await fetchBombasticEntries()
 
   const leaderboard = rankPlayers(entries, config.prizeMap)
   const prizes = prizesFromMap(config.prizeMap)

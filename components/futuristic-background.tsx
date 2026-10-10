@@ -14,8 +14,12 @@ interface Particle {
 }
 
 type FuturisticBackgroundProps = {
-  variant?: "default" | "bitfortune" | "meta"
+  variant?: "default" | "bitfortune" | "meta" | "daler"
 }
+
+const DALER_STREAK_COLORS = ["#A855F7", "#C084FC", "#E879F9", "#7C3AED", "#818CF8", "#F0ABFC"]
+
+type Streak = { x: number; y: number; len: number; speed: number; color: string; alpha: number }
 
 export default function FuturisticBackground({ variant = "default" }: FuturisticBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -28,6 +32,83 @@ export default function FuturisticBackground({ variant = "default" }: Futuristic
     if (!ctx) return
 
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1))
+
+    if (variant === "daler") {
+      // Distinct look: slanted neon streaks falling over slowly drifting aurora glows.
+      let w = 0
+      let h = 0
+      let streaks: Streak[] = []
+      const slant = 0.35
+      const newStreak = (randomY: boolean): Streak => ({
+        x: Math.random() * (w + h * slant) - h * slant,
+        y: randomY ? Math.random() * h : -Math.random() * 200,
+        len: 40 + Math.random() * 120,
+        speed: 1.2 + Math.random() * 2.6,
+        color: DALER_STREAK_COLORS[Math.floor(Math.random() * DALER_STREAK_COLORS.length)],
+        alpha: 0.25 + Math.random() * 0.5,
+      })
+      const resizeDaler = () => {
+        w = Math.floor(window.innerWidth)
+        h = Math.floor(window.innerHeight)
+        canvas.width = Math.floor(w * dpr)
+        canvas.height = Math.floor(h * dpr)
+        canvas.style.width = `${w}px`
+        canvas.style.height = `${h}px`
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        const count = Math.min(90, Math.max(40, Math.floor((w * h) / 20000)))
+        streaks = Array.from({ length: count }, () => newStreak(true))
+      }
+      const glow = (cx: number, cy: number, r: number, rgb: string, a: number) => {
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+        g.addColorStop(0, `rgba(${rgb}, ${a})`)
+        g.addColorStop(1, `rgba(${rgb}, 0)`)
+        ctx.fillStyle = g
+        ctx.fillRect(0, 0, w, h)
+      }
+      const drawDaler = (t: number) => {
+        ctx.globalAlpha = 1
+        ctx.fillStyle = "rgba(6, 5, 13, 0.22)"
+        ctx.fillRect(0, 0, w, h)
+
+        const s = t * 0.00025
+        glow(w * (0.25 + 0.15 * Math.sin(s)), h * (0.3 + 0.1 * Math.cos(s * 1.3)), Math.max(w, h) * 0.45, "124, 58, 237", 0.05)
+        glow(w * (0.75 + 0.12 * Math.cos(s * 0.8)), h * (0.7 + 0.12 * Math.sin(s)), Math.max(w, h) * 0.4, "232, 121, 249", 0.035)
+
+        ctx.lineCap = "round"
+        ctx.lineWidth = 1.6
+        for (const st of streaks) {
+          st.y += st.speed
+          st.x += st.speed * slant
+          if (st.y - st.len > h) Object.assign(st, newStreak(false))
+          const tx = st.x - st.len * slant
+          const ty = st.y - st.len
+          const g = ctx.createLinearGradient(tx, ty, st.x, st.y)
+          g.addColorStop(0, "rgba(0,0,0,0)")
+          g.addColorStop(1, st.color)
+          ctx.globalAlpha = st.alpha
+          ctx.strokeStyle = g
+          ctx.shadowColor = st.color
+          ctx.shadowBlur = 8
+          ctx.beginPath()
+          ctx.moveTo(tx, ty)
+          ctx.lineTo(st.x, st.y)
+          ctx.stroke()
+        }
+        ctx.shadowBlur = 0
+        ctx.globalAlpha = 1
+      }
+      const loopDaler = (t: number) => {
+        drawDaler(t)
+        rafRef.current = requestAnimationFrame(loopDaler)
+      }
+      resizeDaler()
+      window.addEventListener("resize", resizeDaler)
+      rafRef.current = requestAnimationFrame(loopDaler)
+      return () => {
+        window.removeEventListener("resize", resizeDaler)
+        if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      }
+    }
 
     let particles: Particle[] = []
     let width = 0
@@ -62,7 +143,8 @@ export default function FuturisticBackground({ variant = "default" }: Futuristic
     }
 
     const draw = (t: number) => {
-      ctx.fillStyle = variant === "meta" ? "rgba(0, 0, 0, 0.12)" : "rgba(15, 23, 42, 0.05)"
+      ctx.fillStyle =
+        variant === "meta" ? "rgba(0, 0, 0, 0.12)" : "rgba(15, 23, 42, 0.05)"
       ctx.fillRect(0, 0, width, height)
 
       const lineColor =
