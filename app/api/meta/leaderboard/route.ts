@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server"
 
 const DEFAULT_SLUG = "streamingshack"
-const DEFAULT_API_BASE = "https://data.crossfade.gg"
+const DEFAULT_API_BASE = "https://circustance.de/v2"
 
 type CrossfadePlayer = {
-  userId?: string
+  playerId?: number | string
+  userId?: number | string
   username?: string
+  bets?: number
   totalWagered?: number
 }
 
@@ -23,14 +25,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "from and to unix timestamps are required" }, { status: 400 })
     }
 
-    const apiKey = process.env.METASPINS_API_KEY || process.env.CROSSFADE_API_KEY
+    const apiKey = process.env.METASPINS_API_KEY
     const slug = process.env.METASPINS_SLUG || DEFAULT_SLUG
+    const apiBase = process.env.METASPINS_API_BASE || DEFAULT_API_BASE
 
     if (!apiKey) {
       return NextResponse.json({ error: "Metaspins API key not configured" }, { status: 500 })
     }
 
-    const upstream = `${DEFAULT_API_BASE}/${slug}/${apiKey}?from=${from}&to=${to}`
+    const upstream = `${apiBase}/${slug}/${apiKey}?from=${from}&to=${to}`
 
     const response = await fetch(upstream, {
       headers: { Accept: "application/json" },
@@ -55,9 +58,9 @@ export async function GET(request: Request) {
     const array = Array.isArray(data.players) ? data.players : []
 
     const normalized = array.map((entry, index) => ({
-      id: entry.userId != null ? String(entry.userId) : String(index + 1),
+      id: String(entry.playerId ?? entry.userId ?? index + 1),
       username: entry.username ?? `Player${index + 1}`,
-      wagered: Number(entry.totalWagered ?? 0),
+      wagered: Number(entry.bets ?? entry.totalWagered ?? 0),
       prize: 0,
       rank: index + 1,
     }))
